@@ -9,3 +9,7 @@ slprj/
 # macOS
 .DS_Store
 stimuli/
+
+# Participant data and fits written by perception_experiment/RunPerceptionExperiment and FitPsychometric
+perception_experiment/data/
+

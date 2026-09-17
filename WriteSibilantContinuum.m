@@ -12,7 +12,10 @@ function manifest = WriteSibilantContinuum(outDir, opts)
 % used: constant for a fixed vowel, equal to a for "morph"), sibilant and
 % vowel duration (s), sibilant onset and vowel onset/offset (samples),
 % sibilant level re. vowel (dB), sibilant peak (Hz, mid slice). The manifest
-% is what a presentation script should read.
+% documents the set and is rewritten whole by every call.
+% perception_experiment/RunPerceptionExperiment finds the WAVs by their file
+% name and synthesises the ones it needs but does not find (appending their
+% rows to the manifest), so writing a set in advance is optional.
 %
 % Options:
 %   A         continuum steps (default 0:0.1:1)
