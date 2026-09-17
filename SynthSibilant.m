@@ -19,11 +19,13 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %             sue), measured at 5 points across the sibilant, so the
 %             anticipatory labialisation before /u/ is reproduced. In between,
 %             the two spectra are MORPHED, not mixed: the frequency axis is
-%             warped (piecewise-linear in log frequency) so that the main
+%             warped (piecewise-linear on the mel scale) so that the main
 %             spectral peaks are aligned at an interpolated position, and the
 %             levels are then linearly interpolated. The peak therefore glides
-%             continuously from the /sh/ to the /s/ frequency and the
-%             intermediate spectra stay unimodal. Duration (log-linear), RMS
+%             continuously from the /sh/ to the /s/ frequency in EQUAL MEL
+%             STEPS per unit a (i.e. equal steps of a are perceptually equal
+%             steps in frequency), and the intermediate spectra stay
+%             unimodal. Duration (log-linear), RMS
 %             envelope and level relative to the vowel are interpolated too.
 %
 %   VOWEL     A time-varying all-pole (LPC) vocal-tract filter, stored as line
@@ -124,7 +126,7 @@ specDb = zeros(K, numel(u));
 peakHz = zeros(1, K);
 for k = 1:K
     [specDb(k, :), peakHz(k)] = morphSpectrum(Wsh.sibSpecDb(k, :), Ws.sibSpecDb(k, :), ...
-                                              Wsh.sibPeakHz(k), Ws.sibPeakHz(k), a, u);
+                                              Wsh.sibPeakHz(k), Ws.sibPeakHz(k), a, M.logGridHz);
 end
 
 sib = shapedNoise(round(sibDur * Fs), specDb, u, Fs, rs);
@@ -216,15 +218,27 @@ M = cache;
 end
 
 %% ------------------------------------------------------------------------
-function [La, peakHz] = morphSpectrum(Lsh, Ls, pSh, pS, a, u)
-% Peak-aligned morph between two dB spectra on the log2-frequency grid u.
-uSh = log2(pSh); uS = log2(pS);
-ua  = (1 - a) * uSh + a * uS;                          % intermediate peak position
-u0 = u(1); uN = u(end);
-wSh = interp1([u0 ua uN], [u0 uSh uN], u);             % intermediate axis -> /sh/ axis
-wS  = interp1([u0 ua uN], [u0 uS  uN], u);             % intermediate axis -> /s/ axis
-La = (1 - a) * interp1(u, Lsh, wSh, 'linear', 'extrap') + a * interp1(u, Ls, wS, 'linear', 'extrap');
-peakHz = 2^ua;
+function [La, peakHz] = morphSpectrum(Lsh, Ls, pSh, pS, a, fHz)
+% Landmark-aligned morph between two dB spectra sampled on the grid fHz.
+% The frequency axis is warped piecewise-linearly in MEL (anchors: grid
+% ends and the landmark), so as a goes 0 -> 1 the landmark moves in equal
+% mel steps between the /sh/ and /s/ positions.
+m   = hz2mel(fHz);
+mSh = hz2mel(pSh); mS = hz2mel(pS);
+ma  = (1 - a) * mSh + a * mS;                          % intermediate landmark (mel)
+m0 = m(1); mN = m(end);
+wSh = interp1([m0 ma mN], [m0 mSh mN], m);             % intermediate axis -> /sh/ axis
+wS  = interp1([m0 ma mN], [m0 mS  mN], m);             % intermediate axis -> /s/ axis
+La = (1 - a) * interp1(m, Lsh, wSh, 'linear', 'extrap') + a * interp1(m, Ls, wS, 'linear', 'extrap');
+peakHz = mel2hz(ma);
+end
+
+function m = hz2mel(f)
+m = 2595 * log10(1 + f / 700);                         % O'Shaughnessy (1987) mel scale
+end
+
+function f = mel2hz(m)
+f = 700 * (10 .^ (m / 2595) - 1);
 end
 
 %% ------------------------------------------------------------------------
