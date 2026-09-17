@@ -33,7 +33,10 @@ function V = ValidateSynthSibilant(opts)
 %     the within-talker whole-spectrum position that a listener hearing one
 %     talker would be tracking.
 %  5. VOWEL. Mid-vowel F1/F2 of the synthetic endpoints (EstimateFormants,
-%     experiment lib) vs the talker's real means (all_extracted.tsv).
+%     experiment lib) vs the talker's real means (all_extracted.tsv). The
+%     endpoints for this check are synthesised with 'VowelContext', "morph"
+%     (vowel filter follows the word); the sibilant checks use the default
+%     fixed vowel, which does not affect the sibilant.
 %
 % Writes <OutDir>/validation_all.tsv (one row per talker x vowel) and
 % <OutDir>/fig/validation_all.png. Returns a struct with the table and the
@@ -80,7 +83,8 @@ for i = 1:nT
             [y, ~, info] = SynthSibilant(aGrid(ai), vowels(v), talkers(i), 'Model', M, 'Seed', opts.Seed, 'Template', 1);
             [dB, fHz] = measureMidSpectrum(y(info.sibOnset:info.vowOnset), Fs);
             Xs(i, v, ai, :) = spectrumFeatures(fHz, dB);
-            if ai == 1 || ai == nA
+            if ai == 1 || ai == nA                    % vowel check: coarticulating vowel
+                [y, ~, info] = SynthSibilant(aGrid(ai), vowels(v), talkers(i), 'Model', M, 'Seed', opts.Seed, 'Template', 1, 'VowelContext', "morph");
                 F12(i, v, 1 + (ai == nA), :) = midFormants(y(info.vowOnset:info.vowOffset), Fs, gender);
             end
         end

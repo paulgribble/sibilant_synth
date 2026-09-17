@@ -32,14 +32,29 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %             spectral frequencies over normalised time, driven by a real LPC
 %             residual from one of the talker's own recordings (so pitch,
 %             voice quality and breathiness are the talker's). The filter is
-%             the interpolation, weighted by a, of the talker's mean vowel
-%             after /sh/ and after /s/; thus the coarticulatory difference
-%             between the vowel of "she" and of "see" (mainly the formant
-%             onsets) moves with the sibilant. The RMS contour is likewise
-%             interpolated. Vowel duration and F0 are those of the excitation
-%             template (fixed for a given talker x vowel x template).
+%             a weighted interpolation of the talker's mean vowel after /sh/
+%             and after /s/, the weight being set by VowelContext. By DEFAULT
+%             (VowelContext = 0.5) the weight is fixed halfway, so the vowel
+%             is IDENTICAL at every a and the continuum differs only in the
+%             sibilant: the listener gets a single cue, and the fixed vowel
+%             carries no more evidence for one category than for the other.
+%             With VowelContext = "morph" the weight is a itself, so the
+%             coarticulatory difference between the vowel of "she" and of
+%             "see" (mainly the formant onsets) moves with the sibilant. The
+%             RMS contour follows the same weight. Vowel duration and F0 are
+%             those of the excitation template (fixed for a given talker x
+%             vowel x template).
 %
 % Options (name, value):
+%   VowelContext  which vowel filter to use (default 0.5):
+%                 a number in [0, 1]: fixed vowel, the interpolation at that
+%                   weight between the /sh/-context (0) and /s/-context (1)
+%                   vowel, for every a. 0.5 (default) is neutral; 0 is the
+%                   talker's she/shoe vowel (30 trials), 1 the see/sue vowel
+%                   (5 trials, noisier).
+%                 "sh" / "mid" / "s": aliases for 0 / 0.5 / 1.
+%                 "morph": the weight follows a (coarticulation co-varies
+%                   with the sibilant).
 %   Model     path to the model .mat, or the loaded model struct
 %             (default: sibilant_model.mat next to this file; cached)
 %   Seed      integer: makes the noise, talker choice and template choice
@@ -55,12 +70,15 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %   Fs    sample rate
 %   info  struct: talker, a, vowel, durations, sibilant peak frequencies,
 %         onset/offset sample indices of the sibilant and vowel, template,
-%         seed, and the words the token was interpolated between.
+%         seed, the words the token was interpolated between, and
+%         vowelContext / vowelA (the option as given and the vowel weight
+%         actually used).
 %
 % Examples:
 %   [y, Fs] = SynthSibilant(0, "i");   sound(y, Fs)          % "she", random talker
 %   [y, Fs] = SynthSibilant(1, "u", "pert6P02"); sound(y, Fs) % "sue", one talker
 %   for a = 0:0.1:1, y = SynthSibilant(a, "i", "pert6P02", 'Seed', 1); ... end
+%   y = SynthSibilant(0.5, "u", "pert6P02", 'VowelContext', "morph");  % coarticulating vowel
 %
 % See also BuildSibilantModel, SynthSibilantTalkers.
 
@@ -74,6 +92,7 @@ arguments
     opts.Level (1,1) double = -20
     opts.PadMs (1,2) double {mustBeNonnegative} = [50 50]
     opts.SibDur = []
+    opts.VowelContext = 0.5
     opts.Play (1,1) logical = false
 end
 
@@ -87,6 +106,24 @@ switch vowel
     case {"u", "oo", "shoe", "sue"}, vowel = "u";
     otherwise
         error("SynthSibilant:badVowel", "vowel must be ""i"" (she/see) or ""u"" (shoe/sue), got ""%s"".", vowel);
+end
+
+% vowel context -> weight of the /s/-context vowel filter (av)
+vc = opts.VowelContext;
+if isstring(vc) || ischar(vc)
+    switch lower(string(vc))
+        case "morph", av = a;
+        case "sh",    av = 0;
+        case "mid",   av = 0.5;
+        case "s",     av = 1;
+        otherwise
+            error("SynthSibilant:badVowelContext", ...
+                  "VowelContext must be a number in [0,1], ""sh"", ""mid"", ""s"" or ""morph"", got ""%s"".", string(vc));
+    end
+elseif isnumeric(vc) && isscalar(vc) && vc >= 0 && vc <= 1
+    av = double(vc);
+else
+    error("SynthSibilant:badVowelContext", "VowelContext must be a number in [0,1], ""sh"", ""mid"", ""s"" or ""morph"".");
 end
 
 % random stream
@@ -144,8 +181,8 @@ else
 end
 e = double(tv.residual{tmpl}(:));
 
-lsf   = (1 - a) * Wsh.vowLsf   + a * Ws.vowLsf;         % frames x order
-rmsDb = (1 - a) * Wsh.vowRmsDb + a * Ws.vowRmsDb;
+lsf   = (1 - av) * Wsh.vowLsf   + av * Ws.vowLsf;       % frames x order (av = a only if VowelContext = "morph")
+rmsDb = (1 - av) * Wsh.vowRmsDb + av * Ws.vowRmsDb;
 vow = lpcSynth(e, lsf, M);
 vow = imposeContour(vow, rmsDb, round(0.025 * Fs));
 
@@ -187,6 +224,8 @@ info.sibLevelDb = sibLevelDb;
 info.sibOnset   = sibOn;
 info.vowOnset   = vowOn;
 info.vowOffset  = vowOn + numel(vow) - 1;
+info.vowelContext = opts.VowelContext;
+info.vowelA     = av;                                   % weight of the /s/-context vowel filter used
 info.template   = tmpl;
 info.templateF0Hz = tv.f0Hz(tmpl);
 info.seed       = opts.Seed;

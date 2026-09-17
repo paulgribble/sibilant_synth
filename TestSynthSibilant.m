@@ -19,7 +19,10 @@ function R = TestSynthSibilant(opts)
 %      experiment's lib) at a = 0 and a = 1 and compares them with the mean
 %      tracks of the talker's real she/see (shoe/sue) vowels, to check that
 %      the vowel is realistic and that the /sh/-vs-/s/ coarticulatory
-%      difference is carried over;
+%      difference is carried over. The WAVs and sibilant checks use
+%      SynthSibilant's default fixed (neutral) vowel; the endpoints for this
+%      vowel check are synthesised again with 'VowelContext', "morph", since
+%      only then does the vowel filter follow the word;
 %   4. saves figures to <OutDir>/fig: spectrograms of the endpoints and
 %      midpoint, sibilant spectra along the continuum, endpoint spectra vs the
 %      real clouds, whole-spectrum position vs a, and the F1/F2 tracks.
@@ -97,11 +100,12 @@ for talker = talkers
         fprintf("  endpoint rms z from the real cloud: a=0 %.2f, a=1 %.2f (a real trial: ~1)\n", zEnd(1), zEnd(2));
 
         % ---- 3. vowel formants: synthetic endpoints vs real mean tracks
+        %      (endpoints re-synthesised with the coarticulating vowel)
         gender = roster.gender(roster.participant == talker);
         nTau = 20;
         synthTracks = zeros(2, nTau, 2);   % word x tau x [F1 F2]
         for w = 1:2
-            info = I{(w-1)*(numel(aGrid)-1)+1}; y = Y{(w-1)*(numel(aGrid)-1)+1};
+            [y, ~, info] = SynthSibilant(w - 1, vowel, talker, 'Model', M, 'Seed', opts.Seed, 'Template', 1, 'VowelContext', "morph");
             vow = y(info.vowOnset:info.vowOffset);
             synthTracks(w, :, :) = formantTrack(vow, Fs, gender, nTau);
         end

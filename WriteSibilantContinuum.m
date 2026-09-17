@@ -8,9 +8,11 @@ function manifest = WriteSibilantContinuum(outDir, opts)
 % Synthesises every talker x vowel x a combination with SynthSibilant, writes
 % <outDir>/<talker>_<vowel>_a<a>.wav (16-bit, 44.1 kHz) and
 % <outDir>/manifest.tsv with one row per file: filename, talker, vowel, a,
-% seed, template, sibilant and vowel duration (s), sibilant onset and vowel
-% onset/offset (samples), sibilant level re. vowel (dB), sibilant peak (Hz,
-% mid slice). The manifest is what a presentation script should read.
+% seed, template, vowel_context (the weight of the /s/-context vowel filter
+% used: constant for a fixed vowel, equal to a for "morph"), sibilant and
+% vowel duration (s), sibilant onset and vowel onset/offset (samples),
+% sibilant level re. vowel (dB), sibilant peak (Hz, mid slice). The manifest
+% is what a presentation script should read.
 %
 % Options:
 %   A         continuum steps (default 0:0.1:1)
@@ -21,6 +23,8 @@ function manifest = WriteSibilantContinuum(outDir, opts)
 %             not reproducible)
 %   Template  excitation template index passed to SynthSibilant ([] = random
 %             per token, chosen from the seeded stream)
+%   VowelContext  passed to SynthSibilant (default 0.5 = the same neutral
+%             vowel at every a; "morph" = coarticulation follows a)
 %   Level, PadMs, Model   passed to SynthSibilant
 
 arguments
@@ -30,6 +34,7 @@ arguments
     opts.Talkers string = "all"
     opts.Seed = 1
     opts.Template = []
+    opts.VowelContext = 0.5
     opts.Level (1,1) double = -20
     opts.PadMs (1,2) double = [50 50]
     opts.Model = ""
@@ -50,17 +55,18 @@ for t = 1:numel(talkers)
             k = k + 1;
             if isempty(opts.Seed), seed = []; else, seed = opts.Seed + k; end
             [y, Fs, info] = SynthSibilant(opts.A(ai), opts.Vowels(v), talkers(t), ...
-                'Seed', seed, 'Template', opts.Template, 'Level', opts.Level, 'PadMs', opts.PadMs, 'Model', opts.Model);
+                'Seed', seed, 'Template', opts.Template, 'VowelContext', opts.VowelContext, ...
+                'Level', opts.Level, 'PadMs', opts.PadMs, 'Model', opts.Model);
             fname = sprintf("%s_%s_a%.3f.wav", talkers(t), opts.Vowels(v), opts.A(ai));
             audiowrite(fullfile(outDir, fname), y, Fs, 'BitsPerSample', 16);
-            rows(end+1, :) = {fname, info.talker, info.vowel, info.a, seed, info.template, ...
+            rows(end+1, :) = {fname, info.talker, info.vowel, info.a, seed, info.template, info.vowelA, ...
                               info.sibDurS, info.vowDurS, info.sibOnset, info.vowOnset, info.vowOffset, ...
                               info.sibLevelDb, info.sibPeakHz(ceil(end/2))}; %#ok<AGROW>
         end
     end
 end
 if isempty(opts.Seed), rows(:, 5) = {NaN}; end
-manifest = cell2table(rows, 'VariableNames', ["filename" "talker" "vowel" "a" "seed" "template" ...
+manifest = cell2table(rows, 'VariableNames', ["filename" "talker" "vowel" "a" "seed" "template" "vowel_context" ...
     "sib_dur_s" "vow_dur_s" "sib_onset" "vow_onset" "vow_offset" "sib_level_db" "sib_peak_hz"]);
 writetable(manifest, fullfile(outDir, "manifest.tsv"), 'FileType', 'text', 'Delimiter', '\t');
 fprintf("wrote %d tokens and manifest.tsv to %s\n", height(manifest), outDir);

@@ -16,14 +16,18 @@ WriteSibilantContinuum("stimuli", 'A', 0:0.1:1)        % WAVs + manifest.tsv (st
 
 `a` is the continuum position, `vowel` is `"i"` (she/see) or `"u"`
 (shoe/sue), and the optional third argument is a talker id or `"random"`.
-Name-value options: `Seed` (reproducible noise, talker and template choice),
-`Template` (which of the talker's two excitation templates), `Level` (vowel
-RMS in dBFS, default −20), `PadMs` (silence before and after, default
-50 ms each), `SibDur` (override the sibilant duration in s), `Play`,
-`Model`. `info` returns the talker, the two words interpolated between,
-durations, sample indices of the sibilant and vowel, the sibilant's landmark
-frequency per time slice, the template and seed used, and any peak-limiting
-scale factor applied.
+Name-value options: `VowelContext` (which vowel filter: a fixed weight in
+[0, 1] between the talker's /ʃ/-context and /s/-context vowel, default 0.5,
+i.e. **the same neutral vowel at every `a`**; aliases `"sh"`, `"mid"`,
+`"s"`; or `"morph"` to let the vowel coarticulation follow `a`), `Seed`
+(reproducible noise, talker and template choice), `Template` (which of the
+talker's two excitation templates), `Level` (vowel RMS in dBFS, default
+−20), `PadMs` (silence before and after, default 50 ms each), `SibDur`
+(override the sibilant duration in s), `Play`, `Model`. `info` returns the
+talker, the two words interpolated between, durations, sample indices of
+the sibilant and vowel, the sibilant's landmark frequency per time slice,
+the vowel weight used (`vowelA`), the template and seed used, and any
+peak-limiting scale factor applied.
 
 ## Files
 
@@ -31,7 +35,7 @@ scale factor applied.
 | --- | --- |
 | `SynthSibilant.m` | the synthesizer (reads `sibilant_model.mat`) |
 | `SynthSibilantTalkers.m` | lists the talker ids in the model |
-| `WriteSibilantContinuum.m` | writes a stimulus set: `<talker>_<vowel>_a<a>.wav` (16-bit) for every talker × vowel × `a`, plus `manifest.tsv` with one row per file |
+| `WriteSibilantContinuum.m` | writes a stimulus set: `<talker>_<vowel>_a<a>.wav` (16-bit) for every talker × vowel × `a`, plus `manifest.tsv` with one row per file (incl. the `vowel_context` weight used) |
 | `BuildSibilantModel.m` | learns `sibilant_model.mat` from the raw recordings (needs the Dropbox raw data and the experiment repo; ~40 s with the Parallel toolbox) |
 | `TestSynthSibilant.m` | detailed per-talker check with figures and WAVs → `test_output/` |
 | `ValidateSynthSibilant.m` | whole-spectrum validation over all talkers → `test_output/validation_all.{tsv,png}` |
@@ -100,14 +104,25 @@ and level relative to the vowel (both linear in dB) are interpolated with
 `a` as well.
 
 **Vowel.** The talker's LSF trajectories after /ʃ/ and after /s/ are
-interpolated with weight `a` (frame by frame) and converted back to an
-all-pole filter that is updated every 5 ms and driven by one of the talker's
-own LPC residuals, then de-emphasised. Pitch, voice quality and breathiness
-are therefore the talker's own, while the vocal-tract filter, including the
-coarticulatory difference between the vowel of *she* and of *see* (mainly
-the formant onsets), moves with the sibilant. The RMS contour is
-interpolated too. Vowel duration and F0 are fixed by the excitation
-template. The sibilant and vowel are joined with a 10 ms cross-fade, the
+interpolated frame by frame with a weight set by `VowelContext`, and
+converted back to an all-pole filter that is updated every 5 ms and driven
+by one of the talker's own LPC residuals, then de-emphasised. Pitch, voice
+quality and breathiness are therefore the talker's own. **By default the
+weight is fixed at 0.5**, so every token of a continuum carries exactly the
+same vowel (bit-identical after the 10 ms join) and the continuum differs
+only in the sibilant; this is the cleaner design for a perception
+experiment, as in Lane et al. (2007) and Shiller et al. (2009), who
+concatenated one natural vowel to every step. The midpoint is chosen because
+it is neutral (it favours neither category), the coarticulatory difference
+between the she- and see-context vowels is small (mid-vowel F2 differs by
+a few tens of Hz, F2 onset by ~100 Hz before /u/, ~15 Hz before /i/,
+medians over talkers), and it leans mostly on the better-estimated
+/ʃ/-context vowel (30 trials vs 5). `VowelContext = "morph"` uses `a` as the
+weight instead, so the coarticulatory difference between the vowel of *she*
+and of *see* (mainly the formant onsets) moves with the sibilant; any fixed
+weight in [0, 1] (aliases `"sh"`, `"mid"`, `"s"`) is also accepted. The RMS
+contour follows the same weight. Vowel duration and F0 are fixed by the
+excitation template. The sibilant and vowel are joined with a 10 ms cross-fade, the
 vowel RMS is set to `Level` dBFS with the sibilant at its data-driven level
 relative to it, and the whole token is scaled down only if it would
 otherwise exceed a peak of 0.99 (`info.scaledBy`).
@@ -140,8 +155,10 @@ cells, `a = 0:0.1:1`):
   population axis individual curves wobble by a few hundredths (only ~40 %
   are strictly monotonic), less than the within-talker spread of real
   trials (SD ≈ 0.1).
-- **Vowel**: mid-vowel F1/F2 of the synthetic endpoints vs the talker's
-  real means (`all_extracted.tsv`): median error −3/−2 Hz after /ʃ/ and
+- **Vowel** (endpoints synthesised with `VowelContext = "morph"`, since
+  only then does the vowel follow the word): mid-vowel F1/F2 of the
+  synthetic endpoints vs the talker's real means (`all_extracted.tsv`):
+  median error −3/−2 Hz after /ʃ/ and
   −7/−1 Hz after /s/ (MAD ≤ 37 Hz). F2 passes the formant tracker's
   confidence gate in only ~70 % of synthetic tokens, but it fails on many
   real /i/ trials too; this is a tracker limitation, not a synthesis
@@ -158,8 +175,10 @@ in the experiment repo).
 
 ## Known limitations
 
-- Vowel duration and F0 come from the excitation template, so they do not
-  vary with `a`; only the vocal-tract filter and RMS contour do.
+- Vowel duration and F0 come from the excitation template, so they never
+  vary with `a`; with the default fixed vowel nothing in the vowel does, and
+  with `VowelContext = "morph"` only the vocal-tract filter and RMS contour
+  do.
 - Only 5 see and 5 sue trials exist per talker, so the /s/ endpoints and the
   post-/s/ vowel filters rest on fewer trials than the /ʃ/ side.
 - All participants are flagged `male` in `participants.tsv`; the gender only
