@@ -189,6 +189,13 @@ the tokens yet** (the agent can't); `test_output/wav/` holds 66 examples
   `timer` whose callback finds the uifigure by name ("Listening
   experiment") and calls `fig.WindowKeyPressFcn(fig, struct('Key','f'))` or
   a button's `ButtonPushedFcn`; `exportapp(fig, file)` screenshots it.
+  Gotcha hit (2026-09-17): an `onCleanup(@() delete(fig))` inside a
+  function whose nested functions are the figure's callbacks never fires
+  (the callbacks keep that workspace alive), and with `CloseRequestFcn` =
+  abort the leftover window could not be closed. Now `delete(fig)` is
+  explicit (try/catch around `runTrials`), and a 2nd close request deletes
+  a window orphaned by ctrl-C. Verified for normal end and Esc; the
+  close-box and error paths were not run.
   Stale-stimulus trap: the experiment reuses whatever WAVs are in
   `stimuli/`; after a synthesis change pass `'Regenerate', true` or rewrite
   the set. Simulated recovery (pse 0.45, σ 0.06, 11 levels): pse unbiased,

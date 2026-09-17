@@ -32,7 +32,9 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 % rt_s is measured from the start of playback (so it includes the token and
 % the unknown audio output latency; treat it as approximate). ESCAPE or
 % closing the window ends the session early; the trials done so far are
-% already in the file.
+% already in the file. The window closes by itself when the session ends;
+% if one is ever left behind (session interrupted with ctrl-C), click its
+% close box twice.
 %
 % Options (name, value):
 %   A           continuum levels, each in [0, 1] with at most 3 decimals
@@ -187,8 +189,7 @@ end
 % =========================================================================
     function runGui()
         fig = uifigure('Name', "Listening experiment", 'Color', [1 1 1], 'Position', [100 100 1000 700], 'WindowState', opts.WindowState, ...
-                       'WindowKeyPressFcn', @onKey, 'CloseRequestFcn', @(~, ~) abort());
-        closeFig = onCleanup(@() delete(fig));
+                       'WindowKeyPressFcn', @onKey, 'CloseRequestFcn', @(~, ~) closeRequest());
         gl = uigridlayout(fig, [4 2], 'RowHeight', {'3x', '3x', '1x', 30}, 'ColumnWidth', {'1x', '1x'}, ...
                           'Padding', [60 30 60 30], 'ColumnSpacing', 60, 'RowSpacing', 20, 'BackgroundColor', [1 1 1]);
         msg = uilabel(gl, 'Text', "", 'FontSize', 20, 'HorizontalAlignment', 'center', 'WordWrap', 'on');
@@ -205,48 +206,60 @@ end
         prog = uilabel(gl, 'Text', "", 'FontSize', 14, 'FontColor', [0.5 0.5 0.5], 'HorizontalAlignment', 'center');
         prog.Layout.Row = 4;  prog.Layout.Column = [1 2];
 
-        waitStart(sprintf("You will hear one word on each trial. Was it ""%s"" or ""%s""?\n\n" + ...
-                          """%s"": press %s or click the left button\n""%s"": press %s or click the right button\n\n" + ...
-                          "Answer once the word has ended. If you are unsure, go with your first impression.", ...
-                          sideLabel(1), sideLabel(2), sideLabel(1), upper(opts.Keys(1)), sideLabel(2), upper(opts.Keys(2))), ...
-                  "Start (space bar)");
+        % The window is deleted explicitly: an onCleanup here would never fire, because
+        % this workspace is kept alive by the window's own callbacks (nested functions).
+        try
+            runTrials();
+        catch err
+            if isvalid(fig), delete(fig); end
+            rethrow(err);
+        end
+        if isvalid(fig), delete(fig); end
 
-        for t = 1:nTrials
-            if St.abort, break, end
-            if opts.BreakEvery > 0 && t > 1 && mod(t - 1, opts.BreakEvery) == 0
-                waitStart(sprintf("Time for a short break.\n%d of %d trials done.", t - 1, nTrials), "Continue (space bar)");
+        % ---- nested: the session, screens and callbacks
+        function runTrials()
+            waitStart(sprintf("You will hear one word on each trial. Was it ""%s"" or ""%s""?\n\n" + ...
+                              """%s"": press %s or click the left button\n""%s"": press %s or click the right button\n\n" + ...
+                              "Answer once the word has ended. If you are unsure, go with your first impression.", ...
+                              sideLabel(1), sideLabel(2), sideLabel(1), upper(opts.Keys(1)), sideLabel(2), upper(opts.Keys(2))), ...
+                      "Start (space bar)");
+
+            for t = 1:nTrials
                 if St.abort, break, end
+                if opts.BreakEvery > 0 && t > 1 && mod(t - 1, opts.BreakEvery) == 0
+                    waitStart(sprintf("Time for a short break.\n%d of %d trials done.", t - 1, nTrials), "Continue (space bar)");
+                    if St.abort, break, end
+                end
+                k = order(t);
+                prog.Text = sprintf("%d / %d", t, nTrials);
+                pause(opts.ItiS);
+                if St.abort, break, end
+
+                player = audioplayer(wav{k}, wavFs(k));      % held in this variable until the next trial, so it is not deleted mid-playback
+                St.phase = "play";
+                play(player);
+                St.t0 = tic;
+                pause(numel(wav{k}) / wavFs(k));             % callbacks run, but responses are ignored until the token ends
+                if St.abort, break, end
+
+                St.phase = "respond";
+                set(btn, 'Enable', 'on');
+                uiwait(fig);
+                if St.abort || ~isvalid(fig), break, end
+
+                writeTrial(t, k, sideSound(St.side) == "s", St.how, St.rt);
+                btn(St.side).BackgroundColor = chosen;
+                pause(0.15);
+                if St.abort || ~isvalid(fig), break, end
+                btn(St.side).BackgroundColor = idle;
+                set(btn, 'Enable', 'off');
             end
-            k = order(t);
-            prog.Text = sprintf("%d / %d", t, nTrials);
-            pause(opts.ItiS);
-            if St.abort, break, end
-
-            player = audioplayer(wav{k}, wavFs(k));      % held in this variable until the next trial, so it is not deleted mid-playback
-            St.phase = "play";
-            play(player);
-            St.t0 = tic;
-            pause(numel(wav{k}) / wavFs(k));             % callbacks run, but responses are ignored until the token ends
-            if St.abort, break, end
-
-            St.phase = "respond";
-            set(btn, 'Enable', 'on');
-            uiwait(fig);
-            if St.abort || ~isvalid(fig), break, end
-
-            writeTrial(t, k, sideSound(St.side) == "s", St.how, St.rt);
-            btn(St.side).BackgroundColor = chosen;
-            pause(0.15);
-            btn(St.side).BackgroundColor = idle;
-            set(btn, 'Enable', 'off');
+            if isvalid(fig) && ~St.abort
+                msg.Text = "Finished. Thank you!";
+                prog.Text = "";
+                pause(2);
+            end
         end
-        if isvalid(fig) && ~St.abort
-            msg.Text = "Finished. Thank you!";
-            prog.Text = "";
-            pause(2);
-        end
-
-        % ---- nested: screens and callbacks
         function waitStart(text, buttonText)
             msg.Text = text;
             go.Text = buttonText;  go.Visible = 'on';
@@ -269,6 +282,11 @@ end
         function abort()
             St.abort = true;
             if isvalid(fig), uiresume(fig); end
+        end
+        function closeRequest()
+            % 1st request ends the session (the window then closes by itself); a 2nd one
+            % closes a window left behind by an interrupted session (ctrl-C)
+            if St.abort && isvalid(fig), delete(fig); else, abort(); end
         end
         function onKey(~, evt)
             key = lower(string(evt.Key));
