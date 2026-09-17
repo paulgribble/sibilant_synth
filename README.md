@@ -35,7 +35,7 @@ peak-limiting scale factor applied.
 | --- | --- |
 | `SynthSibilant.m` | the synthesizer (reads `sibilant_model.mat`) |
 | `SynthSibilantTalkers.m` | lists the talker ids in the model |
-| `WriteSibilantContinuum.m` | writes a stimulus set: `<talker>_<vowel>_a<a>.wav` (16-bit) for every talker × vowel × `a`, plus `manifest.tsv` with one row per file (incl. the `vowel_context` weight used) |
+| `WriteSibilantContinuum.m` | writes a stimulus set: `<talker>_<vowel>_a<a>.wav` (16-bit) for every talker × vowel × `a`, plus `manifest.tsv` with one row per file (incl. the `vowel_context` weight and `template` used; both default to fixed values, 0.5 and 1, so a continuum's vowel is identical end to end) |
 | `BuildSibilantModel.m` | learns `sibilant_model.mat` from the raw recordings (needs the Dropbox raw data and the experiment repo; ~40 s with the Parallel toolbox) |
 | `TestSynthSibilant.m` | detailed per-talker check with figures and WAVs → `test_output/` |
 | `ValidateSynthSibilant.m` | whole-spectrum validation over all talkers → `test_output/validation_all.{tsv,png}` |

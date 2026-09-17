@@ -21,8 +21,9 @@ function manifest = WriteSibilantContinuum(outDir, opts)
 %   Seed      base seed; token (t, v, a) uses Seed + a fixed offset so the
 %             noise differs between tokens but the set is reproducible ([] =
 %             not reproducible)
-%   Template  excitation template index passed to SynthSibilant ([] = random
-%             per token, chosen from the seeded stream)
+%   Template  excitation template index passed to SynthSibilant (default 1,
+%             so every token of a continuum has the same pitch and voice
+%             quality; [] = random per token, chosen from the seeded stream)
 %   VowelContext  passed to SynthSibilant (default 0.5 = the same neutral
 %             vowel at every a; "morph" = coarticulation follows a)
 %   Level, PadMs, Model   passed to SynthSibilant
@@ -33,7 +34,7 @@ arguments
     opts.Vowels (1,:) string = ["i" "u"]
     opts.Talkers string = "all"
     opts.Seed = 1
-    opts.Template = []
+    opts.Template = 1
     opts.VowelContext = 0.5
     opts.Level (1,1) double = -20
     opts.PadMs (1,2) double = [50 50]

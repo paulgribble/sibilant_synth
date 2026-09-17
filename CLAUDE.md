@@ -26,8 +26,10 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   talkers). Only needed if the analysis changes or new participants arrive.
 - `WriteSibilantContinuum(outDir, ...)` — WAV set + `manifest.tsv` (incl.
   `vowel_context`) for the presentation script; passes `VowelContext`
-  through. Paul writes to `stimuli/` (gitignored, regenerable; rewrite it
-  after any change to the synthesis).
+  through; `Template` defaults to 1 there (Paul, 2026-09-17) so a
+  continuum's vowel is identical end to end, excitation included. Paul
+  writes to `stimuli/` (gitignored, regenerable; rewrite it after any
+  change to the synthesis).
 - `TestSynthSibilant()` — 3 talkers, detailed figures + WAVs → `test_output/`.
 - `ValidateSynthSibilant()` — all 72 talkers, whole-spectrum stats →
   `test_output/validation_all.{tsv,png}`; ~3 min.
