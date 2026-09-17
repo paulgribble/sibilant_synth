@@ -6,8 +6,9 @@ function fit = FitPsychometric(data, opts)
 %   fit = FitPsychometric(file, 'Function', "normal", 'Lapse', "none", 'By', "none")
 %   fit = FitPsychometric(T)                                          % a trial table
 %
-% Reads the trials (columns a and resp_s: 1 = the participant said /s/) and
-% fits, separately for every level of the By columns (default: per vowel),
+% Reads the trials (columns a and resp_s: 1 = the participant said /s/;
+% rows whose phase column is not "main", i.e. the practice block, are
+% dropped; files without a phase column are used whole) and fits, separately for every level of the By columns (default: per vowel),
 %
 %   P("s" | a) = gamma + (1 - gamma - lambda) * F((a - mu) / sigma)
 %
@@ -100,8 +101,9 @@ missing = setdiff([need opts.By], string(T.Properties.VariableNames));
 if ~isempty(missing)
     error("FitPsychometric:columns", "Column(s) missing from the data: %s", strjoin(missing, ", "));
 end
+if ismember("phase", string(T.Properties.VariableNames)), T = T(string(T.phase) == "main", :); end
 T = T(~isnan(T.resp_s) & ~isnan(T.a), :);
-if isempty(T), error("FitPsychometric:noTrials", "No trials in the data."); end
+if isempty(T), error("FitPsychometric:noTrials", "No main-phase trials in the data."); end
 
 if isempty(opts.By)
     G = ones(height(T), 1);  groups = table();

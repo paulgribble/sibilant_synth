@@ -199,7 +199,12 @@ the vowels, and the talker(s) (`Talkers`, default `"pert4P17"`; several are
 intermixed). The trial list is every talker × vowel × level combination,
 `Reps` times; each repetition is a freshly shuffled block of all
 combinations, so the order is random but the levels are spread evenly over
-the session (`Seed` makes the order reproducible). Other options: `ItiS`
+the session (`Seed` makes the order reproducible). The session opens with a
+**practice block** of the clear endpoint tokens (`a = 0` and `a = 1` of
+every talker × vowel, whatever `A` is; `Practice` shuffled repetitions of
+each, default 3 = 6 trials for one talker and vowel, 0 = none), run exactly
+like the main trials (no feedback) and followed by a screen announcing the
+main part. Other options: `ItiS`
 (0.75 s), `BreakEvery` (self-paced break every n trials, default off),
 `WindowState`, `StimDir`, `DataDir`, `Regenerate`.
 
@@ -220,7 +225,8 @@ limit. `Esc` or closing the window ends the session; every trial is written
 to disk as soon as it is answered, so nothing is lost.
 
 *Data*: `data/<participant>_<yyyymmdd_HHMMSS>.tsv`, one row per trial, with
-columns `participant`, `trial`, `block` (repetition), `talker`, `vowel`,
+columns `participant`, `phase` (practice / main), `trial` (counted within
+the phase), `block` (repetition; 0 in practice), `talker`, `vowel`,
 `a`, `filename`, `response` (`sh` or `s`), `resp_s` (0 = /ʃ/, 1 = /s/),
 `word` (she / see / shoe / sue), `input` (key / button), `rt_s` (from the
 start of playback; approximate, it includes the unknown audio output
@@ -230,7 +236,7 @@ gitignored. `'Simulate', [pse sigma lapse]` replaces the window and the
 participant by a simulated logistic listener, to try the pipeline.
 
 **`FitPsychometric(file, ...)`** reads one or more data files (or a trial
-table) and fits, separately per vowel by default (`By`),
+table), drops the practice trials, and fits, separately per vowel by default (`By`),
 
     P("s" | a) = γ + (1 − γ − λ) · F((a − μ) / σ)
 
@@ -255,8 +261,8 @@ nothing (σ median 0.053 vs 0.055 for `"none"` at 10 reps); with 3 % lapses
 (0.058), which is why it is the default. With 10 reps per level σ is
 imprecise for a single participant (RMSE ≈ 0.02); use more repetitions or
 finer levels around the boundary if the slope matters. The GUI was tested
-with injected key presses and clicks (responses, side swap, break screen,
-early exit); no participant has been run yet.
+with injected key presses and clicks (responses, side swap, practice block,
+break screen, early exit); no participant has been run yet.
 
 ## Known limitations
 

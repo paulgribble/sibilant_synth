@@ -38,6 +38,11 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   `RunPerceptionExperiment(participant, ...)`: uifigure GUI, two buttons
   (she/see, shoe/sue, or "she / shoe"/"see / sue" when vowels are mixed) +
   keys F/J (`Keys`, `ShSide` for counterbalancing); options `A`, `Reps`,
+  `Practice` (default 3; added 2026-09-17 at Paul's request: a practice
+  block of the endpoint tokens a = 0 and a = 1 per talker × vowel, whatever
+  `A` is, no feedback, rows tagged `phase = "practice"`, `trial` counted
+  within phase, `block` 0; FitPsychometric keeps only `phase == "main"`;
+  the main order for a given `Seed` does not depend on `Practice`),
   `Vowels`, `Talkers` (default "pert4P17", Paul's choice 2026-09-17; it was
   "pert6P02" at first, an arbitrary placeholder), `ItiS`, `BreakEvery`, `Seed`, `StimDir`, `DataDir`,
   `Regenerate`, `WindowState`, `Simulate` ([pse sigma lapse] logistic
