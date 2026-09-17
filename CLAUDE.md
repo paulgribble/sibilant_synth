@@ -38,8 +38,8 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   `RunPerceptionExperiment(participant, ...)`: uifigure GUI, two buttons
   (she/see, shoe/sue, or "she / shoe"/"see / sue" when vowels are mixed) +
   keys F/J (`Keys`, `ShSide` for counterbalancing); options `A`, `Reps`,
-  `Vowels`, `Talkers` (default "pert6P02" — a placeholder, nobody chose it
-  by ear), `ItiS`, `BreakEvery`, `Seed`, `StimDir`, `DataDir`,
+  `Vowels`, `Talkers` (default "pert4P17", Paul's choice 2026-09-17; it was
+  "pert6P02" at first, an arbitrary placeholder), `ItiS`, `BreakEvery`, `Seed`, `StimDir`, `DataDir`,
   `Regenerate`, `WindowState`, `Simulate` ([pse sigma lapse] logistic
   listener, no GUI/audio). Blocked randomisation (each rep = one shuffled
   block of all talker × vowel × a). Responses accepted only after token

@@ -39,7 +39,7 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %               (default 0:0.1:1)
 %   Reps        repetitions of every Talker x Vowel x A combination (default 10)
 %   Vowels      "i" (she/see, default), "u" (shoe/sue) or ["i" "u"] (mixed)
-%   Talkers     one or more talker ids (default "pert6P02"; see
+%   Talkers     one or more talker ids (default "pert4P17"; see
 %               SynthSibilantTalkers). With several, they are intermixed.
 %   StimDir     folder of the WAVs (default ../stimuli next to this folder)
 %   DataDir     where the data file goes (default data/ in this folder)
@@ -76,7 +76,7 @@ arguments
     opts.A (1,:) double {mustBeInRange(opts.A, 0, 1)} = 0:0.1:1
     opts.Reps (1,1) double {mustBeInteger, mustBePositive} = 10
     opts.Vowels (1,:) string = "i"
-    opts.Talkers (1,:) string = "pert6P02"
+    opts.Talkers (1,:) string = "pert4P17"
     opts.StimDir (1,1) string = ""
     opts.DataDir (1,1) string = ""
     opts.Keys (1,2) string = ["f" "j"]

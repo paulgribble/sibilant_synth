@@ -195,7 +195,7 @@ buttons read *she*/*see* for `'Vowels', "i"` (default), *shoe*/*sue* for
 `"u"`, and *she / shoe* and *see / sue* when both vowels are intermixed
 (`["i" "u"]`). The experimenter sets the levels (`A`, default `0:0.1:1`,
 at most 3 decimals), the repetitions of each level (`Reps`, default 10),
-the vowels, and the talker(s) (`Talkers`, default `"pert6P02"`; several are
+the vowels, and the talker(s) (`Talkers`, default `"pert4P17"`; several are
 intermixed). The trial list is every talker × vowel × level combination,
 `Reps` times; each repetition is a freshly shuffled block of all
 combinations, so the order is random but the levels are spread evenly over
