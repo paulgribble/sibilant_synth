@@ -33,7 +33,11 @@ function V = ValidateSynthSibilant(opts)
 %     the within-talker whole-spectrum position that a listener hearing one
 %     talker would be tracking.
 %  5. VOWEL. Mid-vowel F1/F2 of the synthetic endpoints (EstimateFormants,
-%     experiment lib) vs the talker's real means (all_extracted.tsv). The
+%     experiment lib, search-range preset from the roster's gender_guess via
+%     lib/rosterGender) vs the talker's real means (all_extracted.tsv). Note
+%     the real means were extracted in the experiment repo with its `gender`
+%     column, `male` on every row, so for talkers guessed female the two
+%     sides of this comparison use different tracker presets. The
 %     endpoints for this check are synthesised with 'VowelContext', "morph"
 %     (vowel filter follows the word); the sibilant checks use the default
 %     fixed vowel, which does not affect the sibilant.
@@ -77,7 +81,7 @@ Xs = zeros(nT, 2, nA, size(R.X, 2));         % talker x vowel x a x feature
 F12 = nan(nT, 2, 2, 2);                       % talker x vowel x endpoint x [F1 F2]
 vowels = ["i" "u"];
 for i = 1:nT
-    gender = roster.gender(roster.participant == talkers(i));
+    gender = rosterGender(roster, talkers(i));
     for v = 1:2
         for ai = 1:nA
             [y, ~, info] = SynthSibilant(aGrid(ai), vowels(v), talkers(i), 'Model', M, 'Seed', opts.Seed, 'Template', 1);

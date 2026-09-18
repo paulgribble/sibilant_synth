@@ -16,8 +16,10 @@ function R = TestSynthSibilant(opts)
 %      talker's own /sh/ -> /s/ spectral-difference axis (0 = real /sh/ mean,
 %      1 = real /s/ mean), which should rise monotonically with a;
 %   3. tracks F1/F2 of the synthetic vowel (EstimateFormants from the
-%      experiment's lib) at a = 0 and a = 1 and compares them with the mean
-%      tracks of the talker's real she/see (shoe/sue) vowels, to check that
+%      experiment's lib, search ranges from the roster's gender_guess via
+%      lib/rosterGender) at a = 0 and a = 1 and compares them with the mean
+%      tracks of the talker's real she/see (shoe/sue) vowels, re-tracked here
+%      with the same preset, to check that
 %      the vowel is realistic and that the /sh/-vs-/s/ coarticulatory
 %      difference is carried over. The WAVs and sibilant checks use
 %      SynthSibilant's default fixed (neutral) vowel; the endpoints for this
@@ -101,7 +103,7 @@ for talker = talkers
 
         % ---- 3. vowel formants: synthetic endpoints vs real mean tracks
         %      (endpoints re-synthesised with the coarticulating vowel)
-        gender = roster.gender(roster.participant == talker);
+        gender = rosterGender(roster, talker);
         nTau = 20;
         synthTracks = zeros(2, nTau, 2);   % word x tau x [F1 F2]
         for w = 1:2
