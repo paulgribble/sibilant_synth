@@ -63,10 +63,12 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   multitaper windows at mid-sibilant, mirrors the experiment's "m" point),
   `spectrumFeatureGrid` / `spectrumFeatures` (1/12-oct, 500 Hz–16 kHz,
   level-normalised), `loadRealSpectra` (reads the experiment's per-trial
-  `*_spectra.tsv`), `fitSpectrumLda` / `applySpectrumLda`. Gender is read
-  from the roster only for the `EstimateFormants` preset in Test/Validate —
-  the synthesis never reads it; the model's `talkers(i).gender` is a label
-  copied from the roster at build time, stale until the next rebuild.
+  `*_spectra.tsv`), `fitSpectrumLda` / `applySpectrumLda`. The roster's
+  `sex` column is read only for the `EstimateFormants` preset in
+  Test/Validate (its option is still spelled `'gender'` inside the
+  experiment lib — leave that; it is a preset name) — the synthesis never
+  reads it; the model's `talkers(i).sex` is a label copied from the roster
+  at build time, stale until the next rebuild.
 
 ## Data (all external to this folder)
 
@@ -76,11 +78,13 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   hence no see/sue).
 - Experiment repo: `/Users/plg/github/sibilant_experiment` — read its
   `README.md`, `code/analysis/README.md`, `code/analysis/CLAUDE.md` for the
-  data conventions. Used here: `participants.tsv` (roster; `gender` was a
-  `male` placeholder on every row until 2026-09-18, when Paul started
-  rating it by ear with the experiment repo's `code/analysis/rate_gender.m`;
-  a provisional guess had 42 of the 72 model talkers female, 30 male, and
-  pert4P17 male), `scored_data/<pid>_scored.tsv` (sib_start,
+  data conventions. Used here: `participants.tsv` (roster; the `sex`
+  column — renamed from `gender` 2026-09-18, Paul's call: sex is the
+  acoustic variable, gender is identity, and future participants will be
+  asked both — is Paul's by-ear rating of every voice from 2026-09-18, not
+  self-report; it was a `male` placeholder before; 29 of the 72 model
+  talkers male, 43 female; pert4P17 is male),
+  `scored_data/<pid>_scored.tsv` (sib_start,
   sib_end = vowel onset, vow_end, **in samples**, NaN = skipped),
   `extracted_data/all_extracted.tsv` (per-trial scalars incl. vow_f1/vow_f2,
   sib_cog), `extracted_data/participants/<pid>_spectra.tsv` (gitignored
@@ -153,7 +157,7 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   talker's own /ʃ/→/s/ spectral axis, and a pooled shrinkage Fisher
   discriminant. Don't reintroduce COG as the headline check.
 
-## Validation state (2026-09-16, 72 talkers × 2 vowels, re-run after the mel morph; re-run 2026-09-17 after the fixed-vowel default, all numbers unchanged; re-run 2026-09-18 with per-talker gender formant presets, only the vowel numbers changed)
+## Validation state (2026-09-16, 72 talkers × 2 vowels, re-run after the mel morph; re-run 2026-09-17 after the fixed-vowel default, all numbers unchanged; re-run 2026-09-18 with per-talker sex formant presets, only the vowel numbers changed; model rebuilt the same day only to rename its label field `gender` → `sex`, tokens identical to 1e-15)
 
 Endpoint RMS z 0.53 (/ʃ/) / 0.63 (/s/) vs real trials' 0.69 / 0.94 —
 synthetic endpoints sit inside every talker's cloud. Talker-own-axis
@@ -165,7 +169,7 @@ population axis, not the talker's). Mid-vowel F1/F2 errors median −7/+16 Hz
 after /ʃ/, −8/+7 Hz after /s/ (MAD ≤ 39), F2 measurable in 91 % / 85 % of
 synthetic tokens. With the all-male presets (F2 capped at 2600 Hz) F2 was
 measurable in only ~70 %; with a provisional per-talker guess (since
-replaced by Paul's by-ear ratings in the roster's `gender` column) female
+replaced by Paul's by-ear ratings in the roster's `sex` column) female
 /i/ F2 was measurable in 41/42 cells, male /i/ in 24/30 — so the old
 failures were largely the preset's F2 cap, not only a tracker limitation.
 Caveat: the real reference means (`all_extracted.tsv`) were extracted in

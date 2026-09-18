@@ -16,7 +16,7 @@ function R = TestSynthSibilant(opts)
 %      talker's own /sh/ -> /s/ spectral-difference axis (0 = real /sh/ mean,
 %      1 = real /s/ mean), which should rise monotonically with a;
 %   3. tracks F1/F2 of the synthetic vowel (EstimateFormants from the
-%      experiment's lib, search ranges from the roster's gender column) at
+%      experiment's lib, search ranges from the roster's sex column) at
 %      a = 0 and a = 1 and compares them with the mean
 %      tracks of the talker's real she/see (shoe/sue) vowels, re-tracked here
 %      with the same preset, to check that
@@ -103,17 +103,17 @@ for talker = talkers
 
         % ---- 3. vowel formants: synthetic endpoints vs real mean tracks
         %      (endpoints re-synthesised with the coarticulating vowel)
-        gender = roster.gender(roster.participant == talker);
+        sex = roster.sex(roster.participant == talker);
         nTau = 20;
         synthTracks = zeros(2, nTau, 2);   % word x tau x [F1 F2]
         for w = 1:2
             [y, ~, info] = SynthSibilant(w - 1, vowel, talker, 'Model', M, 'Seed', opts.Seed, 'Template', 1, 'VowelContext', "morph");
             vow = y(info.vowOnset:info.vowOffset);
-            synthTracks(w, :, :) = formantTrack(vow, Fs, gender, nTau);
+            synthTracks(w, :, :) = formantTrack(vow, Fs, sex, nTau);
         end
         realTracks = zeros(2, nTau, 2); realN = zeros(1, 2);
         for w = 1:2
-            [realTracks(w, :, :), realN(w)] = realFormantTracks(talker, words(w), opts, roster, Fs, gender, nTau);
+            [realTracks(w, :, :), realN(w)] = realFormantTracks(talker, words(w), opts, roster, Fs, sex, nTau);
         end
         midSel = round(nTau * 0.4):round(nTau * 0.6);
         synthMid = squeeze(mean(synthTracks(:, midSel, :), 2, 'omitnan'));  % word x [F1 F2]
@@ -200,9 +200,9 @@ fprintf("\nWAVs in %s\nfigures in %s\n", wavDir, figDir);
 end
 
 %% ------------------------------------------------------------------------
-function tr = formantTrack(vow, Fs, gender, nTau)
+function tr = formantTrack(vow, Fs, sex, nTau)
 % F1/F2 over normalised time (nTau bins) from EstimateFormants.
-[fm, t, conf] = EstimateFormants(vow, Fs, 'gender', char(gender));
+[fm, t, conf] = EstimateFormants(vow, Fs, 'gender', char(sex));
 f1 = fm(:, 2); f2 = fm(:, 3);
 f1(conf(:, 2) < 0.4) = NaN; f2(conf(:, 3) < 0.4) = NaN;
 tau = t / (numel(vow) / Fs);
@@ -213,7 +213,7 @@ for k = 1:nTau
 end
 end
 
-function [tr, n] = realFormantTracks(talker, word, opts, roster, Fs, gender, nTau)
+function [tr, n] = realFormantTracks(talker, word, opts, roster, Fs, sex, nTau)
 % Mean F1/F2 tracks over the talker's real unshifted recordings of one word.
 group = roster.group(roster.participant == talker);
 Sc = readtable(fullfile(opts.ExperimentDir, "scored_data", talker + "_scored.tsv"), 'FileType', 'text', 'Delimiter', '\t', 'TextType', 'string');
@@ -226,7 +226,7 @@ for k = 1:height(Sc)
     [x, fs] = audioread(fullfile(opts.RawDir, group, talker, Sc.filename(k)));
     vow = x(round(Sc.sib_end(k)):round(Sc.vow_end(k)), 1);
     if fs ~= Fs, vow = resample(vow, Fs, fs); end
-    tr = formantTrack(vow, Fs, gender, nTau);
+    tr = formantTrack(vow, Fs, sex, nTau);
     ok = ~isnan(tr); acc(ok) = acc(ok) + tr(ok); cnt = cnt + ok; n = n + 1;
 end
 tr = acc ./ max(cnt, 1); tr(cnt == 0) = NaN;

@@ -33,7 +33,7 @@ function V = ValidateSynthSibilant(opts)
 %     the within-talker whole-spectrum position that a listener hearing one
 %     talker would be tracking.
 %  5. VOWEL. Mid-vowel F1/F2 of the synthetic endpoints (EstimateFormants,
-%     experiment lib, search-range preset from the roster's gender column)
+%     experiment lib, search-range preset from the roster's sex column)
 %     vs the talker's real means (all_extracted.tsv). The real means come
 %     from the experiment repo's extraction, which uses the same column, so
 %     the two sides only match if that extraction was re-run after the
@@ -81,7 +81,7 @@ Xs = zeros(nT, 2, nA, size(R.X, 2));         % talker x vowel x a x feature
 F12 = nan(nT, 2, 2, 2);                       % talker x vowel x endpoint x [F1 F2]
 vowels = ["i" "u"];
 for i = 1:nT
-    gender = roster.gender(roster.participant == talkers(i));
+    sex = roster.sex(roster.participant == talkers(i));
     for v = 1:2
         for ai = 1:nA
             [y, ~, info] = SynthSibilant(aGrid(ai), vowels(v), talkers(i), 'Model', M, 'Seed', opts.Seed, 'Template', 1);
@@ -89,7 +89,7 @@ for i = 1:nT
             Xs(i, v, ai, :) = spectrumFeatures(fHz, dB);
             if ai == 1 || ai == nA                    % vowel check: coarticulating vowel
                 [y, ~, info] = SynthSibilant(aGrid(ai), vowels(v), talkers(i), 'Model', M, 'Seed', opts.Seed, 'Template', 1, 'VowelContext', "morph");
-                F12(i, v, 1 + (ai == nA), :) = midFormants(y(info.vowOnset:info.vowOffset), Fs, gender);
+                F12(i, v, 1 + (ai == nA), :) = midFormants(y(info.vowOnset:info.vowOffset), Fs, sex);
             end
         end
     end
@@ -237,8 +237,8 @@ fprintf("\nwrote %s and %s\n", fullfile(opts.OutDir, "validation_all.tsv"), full
 end
 
 %% ------------------------------------------------------------------------
-function f12 = midFormants(vow, Fs, gender)
-[fm, t, conf] = EstimateFormants(vow, Fs, 'gender', char(gender));
+function f12 = midFormants(vow, Fs, sex)
+[fm, t, conf] = EstimateFormants(vow, Fs, 'gender', char(sex));
 f1 = fm(:, 2); f2 = fm(:, 3);
 f1(conf(:, 2) < 0.4) = NaN; f2(conf(:, 3) < 0.4) = NaN;
 tau = t / (numel(vow) / Fs); sel = tau >= 0.4 & tau <= 0.6;

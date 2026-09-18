@@ -122,11 +122,11 @@ usepar = opts.UseParallel && license('test', 'Distrib_Computing_Toolbox') && ~is
 rawDir = opts.RawDir; scoredDir = opts.ScoredDir; minTrials = opts.MinTrials;
 if usepar
     parfor i = 1:nT
-        talkers{i} = analyzeTalker(R.participant(i), R.group(i), R.gender(i), rawDir, scoredDir, P, minTrials);
+        talkers{i} = analyzeTalker(R.participant(i), R.group(i), R.sex(i), rawDir, scoredDir, P, minTrials);
     end
 else
     for i = 1:nT
-        talkers{i} = analyzeTalker(R.participant(i), R.group(i), R.gender(i), rawDir, scoredDir, P, minTrials);
+        talkers{i} = analyzeTalker(R.participant(i), R.group(i), R.sex(i), rawDir, scoredDir, P, minTrials);
         fprintf("  [%d/%d] %s  (%.0f s elapsed)\n", i, nT, R.participant(i), toc(t0));
     end
 end
@@ -149,7 +149,7 @@ end
 end
 
 %% ========================================================================
-function T = analyzeTalker(pid, group, gender, rawDir, scoredDir, P, minTrials)
+function T = analyzeTalker(pid, group, sex, rawDir, scoredDir, P, minTrials)
 % Analyse one participant; returns [] if some word has too few usable trials.
 T = [];
 scoredFile = fullfile(scoredDir, pid + "_scored.tsv");
@@ -205,7 +205,7 @@ for v = 1:numel(vowels)
 end
 templ = [templ{:}];
 
-T = struct('id', pid, 'group', group, 'gender', gender, 'words', words, 'templates', templ, ...
+T = struct('id', pid, 'group', group, 'sex', sex, 'words', words, 'templates', templ, ...
            'nTrials', numel(tr));
 end
 
