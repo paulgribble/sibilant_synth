@@ -3,7 +3,8 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %
 %   RunPerceptionExperiment("P01")                                   % she/see, a = 0:0.1:1, 10 reps
 %   RunPerceptionExperiment("P01", 'A', 0:0.2:1, 'Reps', 15)
-%   RunPerceptionExperiment("P01", 'A', [0 0.25:0.05:0.75 1], 'Reps', [3 4 5 8 12 15 16 15 12 8 5 4 3])   % weighted, 110 trials
+%   RunPerceptionExperiment("P01", 'A', [0 0.2 0.3 0.35 0.4:0.025:0.6 0.65 0.7 0.8 1], ...
+%                           'Reps', [3 3 4 5 7 8 9 10 12 10 9 8 7 5 4 3 3])       % weighted, 110 trials
 %   RunPerceptionExperiment("P01", 'Vowels', "u")                    % shoe/sue
 %   RunPerceptionExperiment("P01", 'Vowels', ["i" "u"])              % both, intermixed
 %   RunPerceptionExperiment("P01", 'Practice', 0)                    % no practice block
@@ -23,16 +24,20 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 % apart from a random start (its own for every level), so it appears at
 % most once per block and is spread over the whole session; each block is
 % then shuffled. Block sizes therefore vary, and a sparse level may first
-% appear a few blocks in. With the suggested design in the example above,
-% A = [0 0.25:0.05:0.75 1], Reps = [3 4 5 8 12 15 16 15 12 8 5 4 3]
-% (110 trials), there are 16 blocks: a = 0.5 is in all of them, 0.45 and
-% 0.55 in all but one, the endpoints in 3 blocks about 5 apart.
-% For 165 trials use Reps = [5 5 8 12 18 22 25 22 18 12 8 5 5]. In
-% simulation (pse 0.45 - 0.6, sigma 0.04 - 0.08, 2 % lapses) the 110-trial
-% design estimates the pse with an SD of 0.013 - 0.021, about 25 % better
-% than 10 repetitions of each of 0, 0.3:0.05:0.7, 1, and the slope to
-% about +/- 20 %. A scalar Reps gives the same order as before this option
-% existed, for a given Seed.
+% appear a few blocks in. The suggested design, in the example above, has
+% 17 levels with steps of 0.025 between 0.4 and 0.6, 0.05 out to 0.3 and
+% 0.7, 0.1 out to 0.2 and 0.8, then the endpoints:
+%   A    = [0 0.2 0.3 0.35 0.4 0.425 0.45 0.475 0.5 0.525 0.55 0.575 0.6 0.65 0.7 0.8 1]
+%   Reps = [3 3   4   5    7   8     9    10    12  10    9    8     7   5    4   3   3]   % 110 trials
+%   Reps = [5 5   6   8    10  12    13   15    17  15    13   12    10  8    6   5   5]   % 165 trials
+% With 110 trials there are 12 blocks: a = 0.5 is in all of them, 0.475 and
+% 0.525 in 10, the endpoints in 3 blocks 4 apart. In simulation (pse
+% 0.45 - 0.6, sigma 0.04 - 0.08, 2 % lapses) it estimates the pse with an
+% SD of 0.011 - 0.020 per session, about 25 - 30 % better than 10
+% repetitions of each of 0, 0.3:0.05:0.7, 1, and the slope to about
+% +/- 20 %; the 0.025 steps mainly put more points on the rising part of
+% the curve for a steep listener. A scalar Reps gives the same order as
+% before this option existed, for a given Seed.
 %
 % Every trial is written to a .tsv file as soon as the response is made.
 %

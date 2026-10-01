@@ -216,10 +216,13 @@ vector with one count per level of `A`, to spend fewer trials on the easy
 endpoints and more near the boundary: there are then `max(Reps)` blocks
 and a level with fewer repetitions is placed in that many of them, evenly
 spaced from a random start, so it is still spread over the session. The
-suggested weighted design for a boundary near `a = 0.5` is
-`'A', [0 0.25:0.05:0.75 1], 'Reps', [3 4 5 8 12 15 16 15 12 8 5 4 3]`
-(110 trials; `[5 5 8 12 18 22 25 22 18 12 8 5 5]` for 165). In simulation
-it estimates the pse with an SD of 0.013–0.021 per session, about 25 %
+suggested weighted design for a boundary near `a = 0.5` has 17 levels,
+denser near the middle (steps of 0.025 between 0.4 and 0.6, 0.05 out to
+0.3 and 0.7, 0.1 out to 0.2 and 0.8, then the endpoints):
+`'A', [0 0.2 0.3 0.35 0.4:0.025:0.6 0.65 0.7 0.8 1], 'Reps',
+[3 3 4 5 7 8 9 10 12 10 9 8 7 5 4 3 3]` (110 trials;
+`[5 5 6 8 10 12 13 15 17 15 13 12 10 8 6 5 5]` for 165). In simulation it
+estimates the pse with an SD of 0.011–0.020 per session, about 25–30 %
 better than 10 repetitions of each of `0, 0.3:0.05:0.7, 1`, and the slope
 to about ±20 %. The session opens with a
 **practice block** of the clear endpoint tokens (`a = 0` and `a = 1` of

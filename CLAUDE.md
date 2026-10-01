@@ -43,12 +43,14 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   level with fewer reps sits in that many blocks, evenly spaced from a random
   start; with a scalar the order for a given `Seed` is unchanged from before;
   the `.json` always records `reps` per sorted level; suggested design,
-  Paul 2026-09-30, in the doc header: `A = [0 0.25:0.05:0.75 1]`,
-  `Reps = [3 4 5 8 12 15 16 15 12 8 5 4 3]` = 110 trials — pilot1 that day
-  had pse 0.59, σ 0.042, but Paul expects pse ≈ 0.5 and shallower slopes in
-  general; simulation across pse 0.45–0.6, σ 0.04–0.08 gave pse SD
-  0.013–0.021 per probe, enough for the planned 0.075 pre/post shift at
-  n = 20–30, where between-subject variance dominates),
+  Paul 2026-09-30, in the doc header: 17 levels denser near the middle,
+  `A = [0 0.2 0.3 0.35 0.4:0.025:0.6 0.65 0.7 0.8 1]`,
+  `Reps = [3 3 4 5 7 8 9 10 12 10 9 8 7 5 4 3 3]` = 110 trials — pilot1
+  that day had pse 0.59, σ 0.042, but Paul expects pse ≈ 0.5 and shallower
+  slopes in general; simulation across pse 0.45–0.6, σ 0.04–0.08 gave pse
+  SD 0.011–0.020 per probe, ~10 % better than a uniform 0.25:0.05:0.75
+  grid with the same weighting and enough for the planned 0.075 pre/post
+  shift at n = 20–30, where between-subject variance dominates),
   `Practice` (default 3; added 2026-09-17 at Paul's request: a practice
   block of the endpoint tokens a = 0 and a = 1 per talker × vowel, whatever
   `A` is, no feedback, rows tagged `phase = "practice"`, `trial` counted
