@@ -37,7 +37,18 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   experiment and its analysis; `addpath perception_experiment` to use it.
   `RunPerceptionExperiment(participant, ...)`: uifigure GUI, two buttons
   (she/see, shoe/sue, or "she / shoe"/"see / sue" when vowels are mixed) +
-  keys F/J (`Keys`, `ShSide` for counterbalancing); options `A`, `Reps`,
+  keys F/J (`Keys`, `ShSide` for counterbalancing); options `A`, `Reps`
+  (scalar, or since 2026-09-30 a vector with one count per level of `A`, in
+  the order typed, for more trials near the boundary: `max(Reps)` blocks, a
+  level with fewer reps sits in that many blocks, evenly spaced from a random
+  start; with a scalar the order for a given `Seed` is unchanged from before;
+  the `.json` always records `reps` per sorted level; suggested design,
+  Paul 2026-09-30, in the doc header: `A = [0 0.25:0.05:0.75 1]`,
+  `Reps = [3 4 5 8 12 15 16 15 12 8 5 4 3]` = 110 trials — pilot1 that day
+  had pse 0.59, σ 0.042, but Paul expects pse ≈ 0.5 and shallower slopes in
+  general; simulation across pse 0.45–0.6, σ 0.04–0.08 gave pse SD
+  0.013–0.021 per probe, enough for the planned 0.075 pre/post shift at
+  n = 20–30, where between-subject variance dominates),
   `Practice` (default 3; added 2026-09-17 at Paul's request: a practice
   block of the endpoint tokens a = 0 and a = 1 per talker × vowel, whatever
   `A` is, no feedback, rows tagged `phase = "practice"`, `trial` counted
@@ -47,7 +58,8 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   "pert6P02" at first, an arbitrary placeholder), `ItiS`, `BreakEvery`, `Seed`, `StimDir`, `DataDir`,
   `Regenerate`, `WindowState`, `Simulate` ([pse sigma lapse] logistic
   listener, no GUI/audio). Blocked randomisation (each rep = one shuffled
-  block of all talker × vowel × a). Responses accepted only after token
+  block of all talker × vowel × a; with a vector `Reps`, sparse levels
+  appear in a subset of the blocks). Responses accepted only after token
   offset; each trial appended to `data/<id>_<stamp>.tsv` immediately
   (+ `.json` of settings); Esc/close = early exit.
   `PreparePerceptionStimuli(stimDir, talkers, vowels, A)`: finds

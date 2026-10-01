@@ -211,7 +211,17 @@ the vowels, and the talker(s) (`Talkers`, default `"pert4P17"`; several are
 intermixed). The trial list is every talker × vowel × level combination,
 `Reps` times; each repetition is a freshly shuffled block of all
 combinations, so the order is random but the levels are spread evenly over
-the session (`Seed` makes the order reproducible). The session opens with a
+the session (`Seed` makes the order reproducible). `Reps` can also be a
+vector with one count per level of `A`, to spend fewer trials on the easy
+endpoints and more near the boundary: there are then `max(Reps)` blocks
+and a level with fewer repetitions is placed in that many of them, evenly
+spaced from a random start, so it is still spread over the session. The
+suggested weighted design for a boundary near `a = 0.5` is
+`'A', [0 0.25:0.05:0.75 1], 'Reps', [3 4 5 8 12 15 16 15 12 8 5 4 3]`
+(110 trials; `[5 5 8 12 18 22 25 22 18 12 8 5 5]` for 165). In simulation
+it estimates the pse with an SD of 0.013–0.021 per session, about 25 %
+better than 10 repetitions of each of `0, 0.3:0.05:0.7, 1`, and the slope
+to about ±20 %. The session opens with a
 **practice block** of the clear endpoint tokens (`a = 0` and `a = 1` of
 every talker × vowel, whatever `A` is; `Practice` shuffled repetitions of
 each, default 3 = 6 trials for one talker and vowel, 0 = none), run exactly

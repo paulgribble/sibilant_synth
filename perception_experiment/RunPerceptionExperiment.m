@@ -3,6 +3,7 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %
 %   RunPerceptionExperiment("P01")                                   % she/see, a = 0:0.1:1, 10 reps
 %   RunPerceptionExperiment("P01", 'A', 0:0.2:1, 'Reps', 15)
+%   RunPerceptionExperiment("P01", 'A', [0 0.25:0.05:0.75 1], 'Reps', [3 4 5 8 12 15 16 15 12 8 5 4 3])   % weighted, 110 trials
 %   RunPerceptionExperiment("P01", 'Vowels', "u")                    % shoe/sue
 %   RunPerceptionExperiment("P01", 'Vowels', ["i" "u"])              % both, intermixed
 %   RunPerceptionExperiment("P01", 'Practice', 0)                    % no practice block
@@ -13,8 +14,27 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 % pressing a key (F = left button, J = right button by default). The
 % stimulus list is every Talker x Vowel x A combination, Reps times: each
 % repetition is one block holding every combination once, shuffled afresh,
-% so the levels are spread evenly over the session. Every trial is written
-% to a .tsv file as soon as the response is made.
+% so the levels are spread evenly over the session.
+%
+% WEIGHTED REPS. Reps may instead give a count per level of A, to spend
+% fewer trials on the easy endpoints and more near the boundary. The
+% session then has max(Reps) blocks, played one after another. A level with
+% n repetitions is placed in n of those blocks, spaced max(Reps)/n blocks
+% apart from a random start (its own for every level), so it appears at
+% most once per block and is spread over the whole session; each block is
+% then shuffled. Block sizes therefore vary, and a sparse level may first
+% appear a few blocks in. With the suggested design in the example above,
+% A = [0 0.25:0.05:0.75 1], Reps = [3 4 5 8 12 15 16 15 12 8 5 4 3]
+% (110 trials), there are 16 blocks: a = 0.5 is in all of them, 0.45 and
+% 0.55 in all but one, the endpoints in 3 blocks about 5 apart.
+% For 165 trials use Reps = [5 5 8 12 18 22 25 22 18 12 8 5 5]. In
+% simulation (pse 0.45 - 0.6, sigma 0.04 - 0.08, 2 % lapses) the 110-trial
+% design estimates the pse with an SD of 0.013 - 0.021, about 25 % better
+% than 10 repetitions of each of 0, 0.3:0.05:0.7, 1, and the slope to
+% about +/- 20 %. A scalar Reps gives the same order as before this option
+% existed, for a given Seed.
+%
+% Every trial is written to a .tsv file as soon as the response is made.
 %
 % The session opens with a PRACTICE block of the clear endpoint tokens
 % (a = 0 and a = 1 of every Talker x Vowel, whatever A is; Practice shuffled
@@ -49,7 +69,9 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 % Options (name, value):
 %   A           continuum levels, each in [0, 1] with at most 3 decimals
 %               (default 0:0.1:1)
-%   Reps        repetitions of every Talker x Vowel x A combination (default 10)
+%   Reps        repetitions of every Talker x Vowel x A combination
+%               (default 10), or a vector with one count per level of A,
+%               in the order A is given (its levels must then be distinct)
 %   Practice    repetitions of each endpoint (a = 0, a = 1) per Talker x Vowel
 %               in the practice block (default 3, i.e. 6 trials for one
 %               talker and vowel; 0 = no practice)
@@ -81,8 +103,9 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %       filename, response ("sh" or "s"), resp_s (0 = /sh/, 1 = /s/), word
 %       (the word chosen: she / see / shoe / sue), input (key / button /
 %       sim), rt_s, sh_side, time (HH:mm:ss.SSS at the response)
-%   <participant>_<yyyymmdd_HHMMSS>.json  the options, the trial-order seed,
-%       the stimulus folder and whether the session was completed
+%   <participant>_<yyyymmdd_HHMMSS>.json  the options (reps is the count per
+%       level of the sorted A), the trial-order seed, the stimulus folder and
+%       whether the session was completed
 %
 % Returns the trial table T and the path of the .tsv. Analyse with
 % FitPsychometric(dataFile).
@@ -92,7 +115,7 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 arguments
     participant (1,1) string
     opts.A (1,:) double {mustBeInRange(opts.A, 0, 1)} = 0:0.1:1
-    opts.Reps (1,1) double {mustBeInteger, mustBePositive} = 10
+    opts.Reps (1,:) double {mustBeInteger, mustBePositive} = 10
     opts.Practice (1,1) double {mustBeInteger, mustBeNonnegative} = 3
     opts.Vowels (1,:) string = "i"
     opts.Talkers (1,:) string = "pert4P17"
@@ -120,7 +143,18 @@ end
 if any(abs(opts.A - round(opts.A, 3)) > 1e-9)
     error("RunPerceptionExperiment:badA", "A levels may have at most 3 decimals (they name the WAV files).");
 end
-A = unique(round(opts.A, 3));
+[A, ia] = unique(round(opts.A, 3));
+if isscalar(opts.Reps)
+    reps = repmat(opts.Reps, 1, numel(A));
+else                                                     % one count per level of A, as typed
+    if numel(opts.Reps) ~= numel(opts.A)
+        error("RunPerceptionExperiment:badReps", "Reps must be a scalar or have one entry per level of A (%d), got %d.", numel(opts.A), numel(opts.Reps));
+    end
+    if numel(A) ~= numel(opts.A)
+        error("RunPerceptionExperiment:badReps", "With a vector Reps the levels in A must be distinct.");
+    end
+    reps = opts.Reps(ia);                                % now aligned with the sorted A
+end
 vowels = unique(arrayfun(@normVowel, opts.Vowels), 'stable');
 talkers = unique(opts.Talkers, 'stable');
 opts.Keys = lower(opts.Keys);
@@ -159,11 +193,27 @@ end
 seed = opts.Seed;
 if isempty(seed), seed = randi(RandStream('mt19937ar', 'Seed', 'shuffle'), 2^31 - 2); end
 rs = RandStream('mt19937ar', 'Seed', seed);
-iMain = find(ismember(stim.a, A));                       % main: every talker x vowel x A, one shuffled block per repetition
-iPrac = find(stim.a == 0 | stim.a == 1);                 % practice: the endpoints of every talker x vowel, same scheme
-order = zeros(numel(iMain), opts.Reps);
-for r = 1:opts.Reps, order(:, r) = iMain(randperm(rs, numel(iMain))); end
-block = repmat(1:opts.Reps, numel(iMain), 1);
+% Main trials: max(reps) blocks, each a shuffled set of talker x vowel x A items.
+% An item with the full number of repetitions is in every block; one with
+% fewer is spread evenly over the blocks (spacing nBlocks / n, random start),
+% so sparse levels are still sprinkled through the whole session. With a
+% scalar Reps every item is in every block, as before.
+iMain = find(ismember(stim.a, A));
+nBlocks = max(reps);
+inBlock = false(numel(iMain), nBlocks);
+for j = 1:numel(iMain)
+    n = reps(A == stim.a(iMain(j)));
+    if n == nBlocks, inBlock(j, :) = true;
+    else,            inBlock(j, floor(((0:n - 1) + rand(rs)) / n * nBlocks) + 1) = true;
+    end
+end
+order = [];  block = [];
+for r = 1:nBlocks
+    members = iMain(inBlock(:, r));
+    order = [order; members(randperm(rs, numel(members)))];  %#ok<AGROW>
+    block = [block; repmat(r, numel(members), 1)];           %#ok<AGROW>
+end
+iPrac = find(stim.a == 0 | stim.a == 1);                 % practice: the endpoints of every talker x vowel, one shuffled block per repetition
 pracOrder = zeros(numel(iPrac), opts.Practice);          % drawn after the main order, so Practice does not change it
 for r = 1:opts.Practice, pracOrder(:, r) = iPrac(randperm(rs, numel(iPrac))); end
 nTrials = numel(order);                                  % main trials
@@ -178,7 +228,7 @@ dataFile = fullfile(opts.DataDir, participant + "_" + stamp + ".tsv");
 infoFile = fullfile(opts.DataDir, participant + "_" + stamp + ".json");
 info = struct('participant', participant, 'started', string(datetime('now')), 'completed', false, ...
               'nTrialsPlanned', nTrials, 'nTrialsDone', 0, 'nPracticePlanned', nPrac, 'nPracticeDone', 0, ...
-              'A', A, 'reps', opts.Reps, 'practiceReps', opts.Practice, ...
+              'A', A, 'reps', reps, 'practiceReps', opts.Practice, ...
               'vowels', vowels, 'talkers', talkers, 'stimDir', opts.StimDir, 'keys', opts.Keys, ...
               'shSide', opts.ShSide, 'itiS', opts.ItiS, 'breakEvery', opts.BreakEvery, ...
               'orderSeed', seed, 'simulate', opts.Simulate);
@@ -216,7 +266,8 @@ end
 if nDone > 0
     Tm = T(T.phase == "main", :);
     [g, lev] = findgroups(Tm.a);
-    fprintf("  a        %s\n  p(""s"")   %s\n", sprintf("%6.3f", lev), sprintf("%6.2f", splitapply(@mean, Tm.resp_s, g)));
+    fprintf("  a        %s\n  n        %s\n  p(""s"")   %s\n", sprintf("%6.3f", lev), sprintf("%6d", splitapply(@numel, Tm.resp_s, g)), ...
+            sprintf("%6.2f", splitapply(@mean, Tm.resp_s, g)));
 end
 
 % =========================================================================
