@@ -43,7 +43,7 @@ peak-limiting scale factor.
 | `BuildSibilantModel.m` | learns `sibilant_model.mat` from the raw recordings (needs the Dropbox raw data and the experiment repo; ~40 s with the Parallel toolbox) |
 | `TestSynthSibilant.m` | detailed per-talker check with figures and WAVs → `test_output/` |
 | `ValidateSynthSibilant.m` | whole-spectrum validation over all talkers → `test_output/validation_all.{tsv,png}` |
-| `perception_experiment/` | `RunPerceptionExperiment.m` (GUI, two-alternative identification, fixed levels), `RunPsiExperiment.m` (the same with levels chosen adaptively by `PsiMethod.m`, the Ψ method), `PreparePerceptionStimuli.m` (synthesises the WAVs the experiment needs and `stimuli/` lacks), `FitPsychometric.m` (maximum-likelihood psychometric function); see [below](#perception-experiment-perception_experiment) |
+| `perception_experiment/` | `RunPerceptionExperiment.m` (GUI, two-alternative identification, fixed levels), `RunPsiExperiment.m` (the same with levels chosen adaptively by `PsiMethod.m`, the Ψ method; `PlotPsiSession.m` plots a session's convergence), `PreparePerceptionStimuli.m` (synthesises the WAVs the experiment needs and `stimuli/` lacks), `FitPsychometric.m` (maximum-likelihood psychometric function); see [below](#perception-experiment-perception_experiment) |
 | `lib/` | shared measurement helpers (mid-sibilant multitaper spectrum, whole-spectrum features, discriminant) |
 | `sibilant_model.mat` | the learned model, 72 talkers, ~22 MB |
 | `.gitignore` | `test_output/` and `stimuli/` (both regenerable), `perception_experiment/data/` (participant data), MATLAB autosave files, `.DS_Store` |
@@ -225,9 +225,14 @@ give the same precision. A function ends after `MaxTrials` (default 100)
 or, with `StopSd = [sdMu sdLogSigma]`, as soon as both posterior SDs are
 that small (checked from `MinTrials`, default 30); several talker × vowel
 functions are interleaved. Each trial row carries the posterior after it
-(`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, no `block` column) and the
+(`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, `lapse_hat`, no `block`
+column) and the
 `.json` the final estimate per function; `FitPsychometric` reads the file
-as usual. In simulation over the pilot range (boundary 0.45–0.55, σ
+as usual, and **`PlotPsiSession(file)`** draws the diagnostics (the level
+of every trial with the running boundary estimate, the running estimate of
+`Measure` = width, σ or slope, and the posterior SDs of boundary and
+`Measure` against trials, with the `StopSd` thresholds) to
+`<file>_psi.png`. In simulation over the pilot range (boundary 0.45–0.55, σ
 0.02–0.07, lapse 0–3 %) 100 trials give a boundary RMSE of 0.005–0.021
 (≈ 0.3 σ) and σ to ±22–26 % whatever the true boundary, where the
 136-trial constant design gives 0.008–0.019 and ±26–80 %; the posterior

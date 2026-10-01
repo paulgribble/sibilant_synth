@@ -37,7 +37,8 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % when the listener never lapses, because the prior allows lapses; the
 % maximum-likelihood fit shows the same bias. Analyse with FitPsychometric
 % as usual (its likelihood does not care how the levels were chosen) or use
-% the posterior estimates in the .json and the trial rows.
+% the posterior estimates in the .json and the trial rows; PlotPsiSession
+% draws the trial levels and the posterior SDs against trials.
 %
 % Options (name, value), those of RunPerceptionExperiment unless noted:
 %   Levels      levels a trial may be placed at, in [0, 1], at most 3 decimals
@@ -59,15 +60,15 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % Output files, in DataDir:
 %   <participant>_<yyyymmdd_HHMMSS>.tsv   one row per trial, the columns of
 %       RunPerceptionExperiment (block omitted) plus mu_hat, sigma_hat, mu_sd,
-%       logsigma_sd: the posterior of that trial's function after the response
-%       (NaN in practice)
+%       logsigma_sd, lapse_hat: the posterior of that trial's function after
+%       the response (NaN in practice)
 %   <participant>_<yyyymmdd_HHMMSS>.json  the options, the seed, and per
 %       talker x vowel the final estimate (n, why it stopped, mu, sigma,
 %       their SDs and 95 % credible intervals, lapse, slope, width)
 %
 % Returns the trial table T, the path of the .tsv and the estimates as a table.
 %
-% See also PsiMethod, RunPerceptionExperiment, FitPsychometric, PreparePerceptionStimuli.
+% See also PsiMethod, PlotPsiSession, RunPerceptionExperiment, FitPsychometric, PreparePerceptionStimuli.
 
 arguments
     participant (1,1) string
@@ -188,7 +189,7 @@ writeInfo();
 fid = fopen(dataFile, 'w');                              % 'w' flushes after every write
 if fid < 0, error("RunPsiExperiment:noFile", "Cannot write %s.", dataFile); end
 closeFile = onCleanup(@() fclose(fid));
-fprintf(fid, "participant\tphase\ttrial\ttalker\tvowel\ta\tfilename\tresponse\tresp_s\tword\tinput\trt_s\tsh_side\ttime\tmu_hat\tsigma_hat\tmu_sd\tlogsigma_sd\n");
+fprintf(fid, "participant\tphase\ttrial\ttalker\tvowel\ta\tfilename\tresponse\tresp_s\tword\tinput\trt_s\tsh_side\ttime\tmu_hat\tsigma_hat\tmu_sd\tlogsigma_sd\tlapse_hat\n");
 
 % ---------------------------------------------------------------- run
 St = struct('phase', "idle", 'abort', false, 'side', 0, 'how', "", 'rt', NaN, 't0', uint64(0));
@@ -376,8 +377,8 @@ end
     function writeTrial(phase, t, k, saidS, how, rt, e)
         resp = ["sh" "s"];  resp = resp(saidS + 1);
         if stim.vowel(k) == "i", words = ["she" "see"]; else, words = ["shoe" "sue"]; end
-        if isempty(e), post = nan(1, 4); else, post = [e.mu e.sigma e.muSd e.logSigmaSd]; end
-        fprintf(fid, "%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%.4f\t%.4f\t%.4f\t%.4f\n", participant, phase, t, ...
+        if isempty(e), post = nan(1, 5); else, post = [e.mu e.sigma e.muSd e.logSigmaSd e.lapse]; end
+        fprintf(fid, "%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", participant, phase, t, ...
                 stim.talker(k), stim.vowel(k), stim.a(k), stim.filename(k), resp, saidS, words(saidS + 1), how, rt, ...
                 opts.ShSide, string(datetime('now', 'Format', 'HH:mm:ss.SSS')), post);
         if phase == "main", nDone = t; else, nPracDone = t; end

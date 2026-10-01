@@ -84,7 +84,7 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     `MaxTrials` (100 per talker × vowel), `StopSd` ([] or
     [sdMu sdLogSigma], checked from `MinTrials` 30), `SigmaRange`, `Lapse`,
     `Function`; several talker × vowel functions are interleaved in rounds.
-    Rows carry `mu_hat sigma_hat mu_sd logsigma_sd` (no `block`); the
+    Rows carry `mu_hat sigma_hat mu_sd logsigma_sd lapse_hat` (no `block`); the
     `.json` has `estimates`. The GUI code is a copy of
     RunPerceptionExperiment's (its nested-callback design made a shared
     helper a bigger refactor than the duplication); change both together.
@@ -104,7 +104,12 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     150 sessions) gave the same precision. Suggested: `MaxTrials` 100 (~4 min), or `StopSd`
     [0.015 0.25] with `MaxTrials` 150 when the slope matters most.
     Headless GUI test with injected keys/clicks passed (normal end);
-    Esc/close paths not run.
+    Esc/close paths not run. `PlotPsiSession(file)` (Paul, 2026-10-01):
+    2 × 2 figure per session, levels + running boundary, running
+    `Measure` (width default / sigma / slope), posterior SD of boundary
+    and of `Measure` (delta method, estimate × SD of log σ) vs trials on
+    log axes, StopSd lines; saves `<file>_psi.png` (`_psi_<Measure>.png`
+    for sigma/slope).
   - `PreparePerceptionStimuli(stimDir, talkers, vowels, A)`: finds
     `<talker>_<vowel>_a<a>.wav` by name, synthesises missing ones in a
     batch with the WriteSibilantContinuum defaults (seed hashed from the
