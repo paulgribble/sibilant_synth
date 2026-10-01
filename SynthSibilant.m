@@ -43,7 +43,10 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %             "see" (mainly the formant onsets) moves with the sibilant. The
 %             RMS contour follows the same weight. Vowel duration and F0 are
 %             those of the excitation template (fixed for a given talker x
-%             vowel x template).
+%             vowel x template). The sibilant and vowel are joined by a
+%             10 ms cross-fade and the vowel ends with a 40 ms raised-cosine
+%             ramp (the scored vowel end is still voiced; a shorter ramp
+%             clicked).
 %
 % Options (name, value):
 %   VowelContext  which vowel filter to use (default 0.5):
@@ -194,7 +197,12 @@ xfade = round(0.010 * Fs);                              % 10 ms sibilant -> vowe
 sib(end-xfade+1:end) = sib(end-xfade+1:end) .* cosRamp(xfade, -1);
 vow(1:xfade)         = vow(1:xfade)         .* cosRamp(xfade, +1);
 sib(1:xfade)         = sib(1:xfade)         .* cosRamp(xfade, +1);
-vow(end-xfade+1:end) = vow(end-xfade+1:end) .* cosRamp(xfade, -1);
+% Vowel offset: 40 ms ramp. The scored vowel end is where voicing is still
+% clearly audible (median -17 dB re mid-vowel) and, in some recordings, a
+% few ms after an end-of-phonation click; a 10 ms ramp (< 1 period at low
+% F0) truncated both into an audible thunk/click.
+ofade = min(round(0.040 * Fs), numel(vow));
+vow(end-ofade+1:end) = vow(end-ofade+1:end) .* cosRamp(ofade, -1);
 
 pad = round(opts.PadMs / 1000 * Fs);
 sibOn  = pad(1) + 1;

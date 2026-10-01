@@ -127,7 +127,11 @@ weight instead, so the coarticulatory difference between the vowel of *she*
 and of *see* (mainly the formant onsets) moves with the sibilant; any fixed
 weight in [0, 1] (aliases `"sh"`, `"mid"`, `"s"`) is also accepted. The RMS
 contour follows the same weight. Vowel duration and F0 are fixed by the
-excitation template. The sibilant and vowel are joined with a 10 ms cross-fade, the
+excitation template. The sibilant and vowel are joined with a 10 ms cross-fade and the vowel ends
+with a 40 ms raised-cosine ramp (the scored vowel end is still clearly
+voiced, median −17 dB re mid-vowel, and in some recordings it sits a few ms
+after an end-of-phonation click; the 10 ms offset ramp used until
+2026-09-30 cut both off into an audible thunk or click), the
 vowel RMS is set to `Level` dBFS with the sibilant at its data-driven level
 relative to it, and the whole token is scaled down only if it would
 otherwise exceed a peak of 0.99 (`info.scaledBy`).
@@ -164,20 +168,17 @@ per-talker sex formant presets (nothing else changed):
 - **Vowel** (endpoints synthesised with `VowelContext = "morph"`, since
   only then does the vowel follow the word): mid-vowel F1/F2 of the
   synthetic endpoints vs the talker's real means (`all_extracted.tsv`):
-  median error −7/+16 Hz after /ʃ/ and −8/+7 Hz after /s/ (MAD ≤ 39 Hz),
-  with F2 passing the tracker's confidence gate in 91 % / 85 % of synthetic
-  tokens. The tracker's search ranges come from the roster's `sex`
-  column. Before 2026-09-18 every row said `male` (F2 capped at 2600 Hz)
-  and F2 was measurable in only ~70 % of tokens; the 2026-09-18 run used a
-  provisional per-talker guess (42 female, 30 male), under which female
-  /i/ F2 was measurable in 41/42 cells and male /i/ in 24/30. The real
-  reference means in `all_extracted.tsv` were still extracted with the
-  all-male roster, so for the female talkers the two sides used different
-  presets (median F2 error +27/+21 Hz vs −4/−19 Hz for males); part of the
-  residual is that mismatch, not the synthesis. The roster's `sex` column
-  has since been rated by ear for every participant (`rate_sex.m` in the
-  experiment repo, 2026-09-18); once the experiment's extraction is re-run
-  with it, re-run this validation.
+  median error −4/−5 Hz after /ʃ/ and −6/−4 Hz after /s/ (MAD ≤ 31 Hz),
+  with F2 passing the tracker's confidence gate in 92 % / 85 % of synthetic
+  tokens (re-run 2026-09-30). The tracker's search ranges come from the
+  roster's `sex` column, rated by ear for every participant on 2026-09-18
+  (`rate_sex.m` in the experiment repo), and the experiment's extraction
+  (`all_extracted.tsv`) was re-run with that roster the same day, so both
+  sides of the comparison now use the same per-talker presets. History:
+  before 2026-09-18 every roster row said `male` (F2 capped at 2600 Hz),
+  F2 was measurable in only ~70 % of tokens, and against the all-male
+  reference the errors were −7/+16 and −8/+7 Hz, with a +27/+21 Hz F2 bias
+  for the female talkers that was the preset mismatch, not the synthesis.
   `TestSynthSibilant` re-tracks the real vowels with the same preset and
   overlays the F1/F2 tracks, including the she–see difference at vowel
   onset.

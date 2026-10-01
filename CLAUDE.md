@@ -159,7 +159,14 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   there is no excitation discontinuity along the continuum.
 - Sibilant level is relative to the vowel (data-driven, interpolated in
   dB); vowel RMS is set by `Level`. Sibilant duration interpolates
-  log-linearly. 10 ms cross-fade at the sibilant→vowel join.
+  log-linearly. 10 ms cross-fade at the sibilant→vowel join; **40 ms
+  raised-cosine ramp at the vowel offset** (2026-09-30, Paul heard a click or
+  "thunk" at the end of some tokens: the scored vow_end is still voiced,
+  median −17 dB re mid-vowel, max −8, so the old 10 ms ramp was a hard cut,
+  under one period for the 80–100 Hz talkers; and 10 of the 288 residual
+  templates carry an end-of-phonation click 2–17 ms before the end that a
+  10 ms ramp barely touched. With 40 ms every such click sits below the
+  preceding 60 ms of residual. The onset and join ramps stay 10 ms.)
 - Outlier rejection (duration, level; > 3 robust SD) only for words with
   ≥ 10 trials — MAD on 5 see/sue trials threw out good ones. Clipped trials
   (> 0.99), sibilants < 60 ms, vowels < 80 ms are dropped. pert6P08 is
@@ -171,7 +178,7 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   talker's own /ʃ/→/s/ spectral axis, and a pooled shrinkage Fisher
   discriminant. Don't reintroduce COG as the headline check.
 
-## Validation state (2026-09-16, 72 talkers × 2 vowels, re-run after the mel morph; re-run 2026-09-17 after the fixed-vowel default, all numbers unchanged; re-run 2026-09-18 with per-talker sex formant presets, only the vowel numbers changed; model rebuilt the same day only to rename its label field `gender` → `sex`, tokens identical to 1e-15)
+## Validation state (2026-09-16, 72 talkers × 2 vowels, re-run after the mel morph; re-run 2026-09-17 after the fixed-vowel default, all numbers unchanged; re-run 2026-09-18 with per-talker sex formant presets, only the vowel numbers changed; model rebuilt the same day only to rename its label field `gender` → `sex`, tokens identical to 1e-15; re-run 2026-09-30 after the 40 ms vowel offset ramp and against the experiment's re-extracted reference: sibilant numbers identical, vowel numbers refreshed)
 
 Endpoint RMS z 0.53 (/ʃ/) / 0.63 (/s/) vs real trials' 0.69 / 0.94 —
 synthetic endpoints sit inside every talker's cloud. Talker-own-axis
@@ -179,20 +186,17 @@ position −0.02 → 0.97, monotonic in 100 % of cells, steps 0.08–0.12 per 0.
 in a (the switch from log2 to mel changed nothing else here). Pooled discriminant 0.04 → 1.02, mean course mildly S-shaped;
 individual curves wobble a few hundredths on that axis (43 % strictly
 monotonic; not noise — averaging 8 seeds didn't fix it — but it's the
-population axis, not the talker's). Mid-vowel F1/F2 errors median −7/+16 Hz
-after /ʃ/, −8/+7 Hz after /s/ (MAD ≤ 39), F2 measurable in 91 % / 85 % of
-synthetic tokens. With the all-male presets (F2 capped at 2600 Hz) F2 was
-measurable in only ~70 %; with a provisional per-talker guess (since
-replaced by Paul's by-ear ratings in the roster's `sex` column) female
-/i/ F2 was measurable in 41/42 cells, male /i/ in 24/30 — so the old
-failures were largely the preset's F2 cap, not only a tracker limitation.
-Caveat: the real reference means (`all_extracted.tsv`) were extracted in
-the experiment repo with the all-male roster, so the female talkers' F2
-error (+27/+21 Hz; male −4/−19) partly reflects the preset mismatch.
-**To do once the roster is fully rated**: re-run the experiment's
-extraction, then `ValidateSynthSibilant`, and refresh these vowel numbers.
-**Nobody has listened to
-the tokens yet** (the agent can't); `test_output/wav/` holds 66 examples
+population axis, not the talker's). Mid-vowel F1/F2 errors median −4/−5 Hz
+after /ʃ/, −6/−4 Hz after /s/ (MAD ≤ 31), F2 measurable in 92 % / 85 % of
+synthetic tokens (2026-09-30; the offset ramp does not touch mid-vowel, the
+change from the earlier −7/+16, −8/+7 is that `all_extracted.tsv` was
+re-extracted on 2026-09-18 with the by-ear `sex` roster, so reference and
+synthesis now use the same formant presets — the to-do from 09-18 is done).
+With the all-male presets (F2 capped at 2600 Hz) F2 was measurable in only
+~70 %; the preset's F2 cap, not the tracker, was the main cause.
+Paul listened on 2026-09-30 (pilots 1–3) and heard a click/thunk at the
+vowel offset of some tokens, fixed the same day (40 ms offset ramp, see
+Design decisions); the agent cannot listen. `test_output/wav/` holds 66 examples
 (local only — not in git; run `TestSynthSibilant` to regenerate).
 
 ## Working here
