@@ -5,44 +5,43 @@ function model = BuildSibilantModel(opts)
 %   model = BuildSibilantModel('Talkers', ["pert6P02" "pert8P01"], ...
 %                              'OutFile', "test_model.mat")
 %
-% Reads the sibilant_experiment raw audio (microphone channel) together with
-% the hand-scored boundaries (scored_data/<pid>_scored.tsv: sibilant onset,
-% sibilant end = vowel onset, vowel end, in samples) for every UNSHIFTED trial
-% (practice and baseline blocks) of the four words she / see / shoe / sue, and
+% Reads the sibilant_experiment raw audio (microphone channel) and the
+% hand-scored boundaries (scored_data/<pid>_scored.tsv: sibilant onset,
+% sibilant end = vowel onset, vowel end, in samples) of every UNSHIFTED
+% trial (practice and baseline blocks) of she / see / shoe / sue, and
 % summarises each talker x word as:
 %
 %   SIBILANT
 %     sibSpecDb   NSibSlices x nLog   mean (in linear power) multitaper
-%                                     spectrum, in dB, at equally spaced points
-%                                     across the normalised sibilant, on a
-%                                     1/48-octave log grid, lightly smoothed
-%     sibPeakHz   1 x NSibSlices      main spectral peak per slice: centroid
-%                                     (log f) of the region within 6 dB of
-%                                     the in-band maximum -- the landmark
-%                                     used to morph /sh/ -> /s/
+%                                     spectrum, dB, at equally spaced points
+%                                     across the sibilant, on a 1/48-octave
+%                                     log grid, lightly smoothed
+%     sibPeakHz   1 x NSibSlices      landmark per slice: log-f centroid of
+%                                     the region within 6 dB of the in-band
+%                                     maximum; what the /sh/ -> /s/ morph aligns
 %     sibEnvDb    1 x NEnv            RMS envelope over normalised time (dB
-%                                     re. the whole-sibilant RMS)
+%                                     re whole-sibilant RMS)
 %     sibDurS                         median duration (s)
 %     sibLevelDb                      mean 20*log10(rms sibilant / rms vowel)
 %   VOWEL
 %     vowLsf      NVowFrames x LpcOrder  vocal-tract filter per normalised-time
-%                                     frame, as line spectral frequencies (rad)
-%                                     averaged across trials (LSF averaging
-%                                     keeps formant bandwidths, unlike
-%                                     averaging spectra)
-%     vowRmsDb    1 x NVowFrames      RMS contour (dB re. whole-vowel RMS)
+%                                     frame, as line spectral frequencies
+%                                     (rad) averaged across trials (keeps
+%                                     formant bandwidths, unlike averaging
+%                                     spectra)
+%     vowRmsDb    1 x NVowFrames      RMS contour (dB re whole-vowel RMS)
 %     vowDurS                         median vowel duration (s)
 %     vowF0Hz                         median mid-vowel F0 (Hz)
 %     vowSpecDb   1 x nLog            mean mid-vowel multitaper spectrum (dB),
-%                                     for validation only
+%                                     validation only
 %
-% and, per talker x vowel, NTemplates LPC-residual excitation signals taken
-% from the she / shoe recordings whose vowel duration is closest to the median.
-% SynthSibilant.m drives the interpolated vocal-tract filter with these.
+% and, per talker x vowel, NTemplates LPC-residual excitation signals from
+% the she / shoe recordings whose vowel duration is closest to the median;
+% SynthSibilant drives the interpolated filter with these.
 %
-% Talkers: every participant in participants.tsv whose cohort recorded all four
-% words -- the ryan cohort (no practice block, hence no see/sue) is excluded,
-% as is any talker with fewer than MinTrials usable trials of some word.
+% Talkers: every participant in participants.tsv whose cohort recorded all
+% four words (the ryan cohort, with no practice block and so no see/sue, is
+% excluded) and who has at least MinTrials usable trials of every word.
 %
 % Options (name, value):
 %   RawDir, ScoredDir, ParticipantsFile   data locations (defaults below)

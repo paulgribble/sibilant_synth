@@ -6,36 +6,35 @@ function fit = FitPsychometric(data, opts)
 %   fit = FitPsychometric(file, 'Function', "normal", 'Lapse', "none", 'By', "none")
 %   fit = FitPsychometric(T)                                          % a trial table
 %
-% Reads the trials (columns a and resp_s: 1 = the participant said /s/;
-% rows whose phase column is not "main", i.e. the practice block, are
-% dropped; files without a phase column are used whole) and fits, separately for every level of the By columns (default: per vowel),
+% Reads the trials (columns a and resp_s, 1 = the participant said /s/;
+% rows whose phase is not "main", i.e. practice, are dropped; files without
+% a phase column are used whole) and fits, separately for every level of
+% the By columns (default: per vowel),
 %
 %   P("s" | a) = gamma + (1 - gamma - lambda) * F((a - mu) / sigma)
 %
-% where F is the logistic 1/(1 + exp(-z)) (default) or the cumulative normal,
-% mu its midpoint and sigma its scale, both in units of a. gamma and lambda
-% are the lapse rates at the /sh/ and the /s/ end (the proportion of "s"
-% answers to a clear /sh/, and of "sh" answers to a clear /s/). With
-% 'Lapse', "symmetric" (default) one rate is fitted, gamma = lambda, in
-% [0, LapseMax]; "free" fits the two separately; "none" fixes both at 0,
-% which biases sigma upward when the participant does lapse (Wichmann & Hill
-% 2001, Percept Psychophys 63:1293).
+% where F is the logistic 1/(1 + exp(-z)) (default) or the cumulative
+% normal, mu its midpoint and sigma its scale, both in units of a. gamma
+% and lambda are the lapse rates at the /sh/ and /s/ ends ("s" answers to
+% a clear /sh/, "sh" answers to a clear /s/). 'Lapse', "symmetric"
+% (default) fits one rate gamma = lambda in [0, LapseMax]; "free" fits the
+% two separately; "none" fixes both at 0, which biases sigma upward when
+% the participant does lapse (Wichmann & Hill 2001, Percept Psychophys
+% 63:1293).
 %
-% ESTIMATION is by maximum likelihood: the binomial log-likelihood
-% sum_i [k_i log p_i + (n_i - k_i) log(1 - p_i)] over the levels (k_i "s"
-% answers in n_i trials; identical to the Bernoulli likelihood of the single
+% ESTIMATION: the binomial log-likelihood over the levels (k_i "s" answers
+% in n_i trials; identical to the Bernoulli likelihood of the single
 % trials) is maximised with fminsearch (no toolbox needed) over mu,
 % log(sigma - 0.001) and the logit of lapse/LapseMax, from the two best
 % points of a coarse grid. sigma is bounded below at 0.001 because with
-% perfectly separated data (all "sh" below some level, all "s" above it) the
-% likelihood keeps rising as sigma -> 0.
+% perfectly separated data the likelihood keeps rising as sigma -> 0.
 %
-% CONFIDENCE INTERVALS are 95 % percentile intervals from a parametric
+% CONFIDENCE INTERVALS: 95 % percentile intervals from a parametric
 % bootstrap (NBoot data sets drawn from the fitted function at the tested
 % levels and trial counts, each refitted). The same replicates give a
-% goodness-of-fit p value: the proportion whose deviance is at least the
-% observed one (small p = the data are further from the curve than binomial
-% noise explains).
+% goodness-of-fit p value, the proportion whose deviance is at least the
+% observed one (small p = the data are further from the curve than
+% binomial noise explains).
 %
 % Options (name, value):
 %   By        columns that define separate fits (default "vowel"; e.g.
@@ -45,10 +44,10 @@ function fit = FitPsychometric(data, opts)
 %   LapseMax  upper bound of a lapse rate (default 0.1)
 %   NBoot     bootstrap replicates (default 1000; 0 = no intervals)
 %   Seed      seed of the bootstrap (default 1)
-%   Plot      draw the figure (default true): per fit the proportion of "s"
-%             answers at each level with its 95 % Wilson interval, the fitted
-%             curve, a dotted line at the boundary and, under the 0.5 line,
-%             a bar for the boundary's bootstrap interval
+%   Plot      draw the figure (default true): per fit, the proportion of
+%             "s" answers at each level with its 95 % Wilson interval, the
+%             fitted curve, a dotted line at the boundary and, under the
+%             0.5 line, a bar for the boundary's bootstrap interval
 %   Save      write <data file>_fit.tsv and, if Plot, <data file>_fit.png
 %             next to the (first) data file (default true; ignored for a
 %             table input)

@@ -5,85 +5,73 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %   [y, Fs, info] = SynthSibilant(a, vowel, talker)         % e.g. "pert6P02"
 %   [y, Fs, info] = SynthSibilant(a, vowel, talker, Name, Value, ...)
 %
-%   a       0.0 = pure /sh/ ... 1.0 = pure /s/ (any value in between)
+%   a       0 = pure /sh/ ... 1 = pure /s/
 %   vowel   "i" (she / see) or "u" (shoe / sue)
-%   talker  "random" (default) or a participant id from the model
-%           (see SynthSibilantTalkers)
+%   talker  "random" (default) or a participant id (see SynthSibilantTalkers)
 %
-% The token is built from a data-driven talker model (sibilant_model.mat, made
-% by BuildSibilantModel from the sibilant_experiment recordings):
+% The token is built from the data-driven talker model sibilant_model.mat
+% (BuildSibilantModel, from the sibilant_experiment recordings):
 %
-%   SIBILANT  White noise shaped, frame by frame, by a time-varying spectral
-%             envelope. At a = 0 / 1 the envelope is the talker's mean /sh/ or
-%             /s/ spectrum IN THE REQUESTED VOWEL CONTEXT (she vs shoe, see vs
-%             sue), measured at 5 points across the sibilant, so the
-%             anticipatory labialisation before /u/ is reproduced. In between,
-%             the two spectra are MORPHED, not mixed: the frequency axis is
-%             warped (piecewise-linear on the mel scale) so that the main
-%             spectral peaks are aligned at an interpolated position, and the
-%             levels are then linearly interpolated. The peak therefore glides
-%             continuously from the /sh/ to the /s/ frequency in EQUAL MEL
-%             STEPS per unit a (i.e. equal steps of a are perceptually equal
-%             steps in frequency), and the intermediate spectra stay
-%             unimodal. Duration (log-linear), RMS
+%   SIBILANT  White noise shaped frame by frame by a time-varying spectral
+%             envelope. At a = 0 / 1 the envelope is the talker's mean /sh/
+%             or /s/ spectrum in the requested vowel context (she vs shoe,
+%             see vs sue), at 5 points across the sibilant, so the
+%             anticipatory labialisation before /u/ is reproduced. In
+%             between, the two spectra are MORPHED, not mixed: the frequency
+%             axis is warped (piecewise-linear on the mel scale) so that the
+%             main spectral peaks align at an interpolated position, then
+%             the levels are interpolated. The peak glides from the /sh/ to
+%             the /s/ frequency in equal mel steps per unit a and the
+%             intermediate spectra stay unimodal. Duration (log-linear), RMS
 %             envelope and level relative to the vowel are interpolated too.
 %
-%   VOWEL     A time-varying all-pole (LPC) vocal-tract filter, stored as line
-%             spectral frequencies over normalised time, driven by a real LPC
-%             residual from one of the talker's own recordings (so pitch,
-%             voice quality and breathiness are the talker's). The filter is
-%             a weighted interpolation of the talker's mean vowel after /sh/
-%             and after /s/, the weight being set by VowelContext. By DEFAULT
-%             (VowelContext = 0.5) the weight is fixed halfway, so the vowel
-%             is IDENTICAL at every a and the continuum differs only in the
-%             sibilant: the listener gets a single cue, and the fixed vowel
-%             carries no more evidence for one category than for the other.
-%             With VowelContext = "morph" the weight is a itself, so the
-%             coarticulatory difference between the vowel of "she" and of
-%             "see" (mainly the formant onsets) moves with the sibilant. The
-%             RMS contour follows the same weight. Vowel duration and F0 are
-%             those of the excitation template (fixed for a given talker x
-%             vowel x template). The sibilant and vowel are joined by a
-%             10 ms cross-fade and the vowel ends with a 40 ms raised-cosine
-%             ramp (the scored vowel end is still voiced; a shorter ramp
-%             clicked).
+%   VOWEL     A time-varying all-pole (LPC) vocal-tract filter, stored as
+%             line spectral frequencies over normalised time, driven by an
+%             LPC residual from one of the talker's own recordings, so pitch,
+%             voice quality and breathiness are the talker's. The filter
+%             interpolates the talker's mean vowel after /sh/ and after /s/
+%             with a weight set by VowelContext. By default (0.5) the weight
+%             is fixed, so the vowel is identical at every a, favours
+%             neither category, and the continuum differs only in the
+%             sibilant. With "morph" the weight is a itself, so the
+%             she-vs-see coarticulation (mainly the formant onsets) moves
+%             with the sibilant. The RMS contour follows the same weight;
+%             vowel duration and F0 are those of the excitation template.
+%             Sibilant and vowel are joined by a 10 ms cross-fade; the vowel
+%             ends with a 40 ms raised-cosine ramp (the scored vowel end is
+%             still voiced and may carry an end-of-phonation click).
 %
 % Options (name, value):
-%   VowelContext  which vowel filter to use (default 0.5):
-%                 a number in [0, 1]: fixed vowel, the interpolation at that
-%                   weight between the /sh/-context (0) and /s/-context (1)
-%                   vowel, for every a. 0.5 (default) is neutral; 0 is the
-%                   talker's she/shoe vowel (30 trials), 1 the see/sue vowel
-%                   (5 trials, noisier).
-%                 "sh" / "mid" / "s": aliases for 0 / 0.5 / 1.
-%                 "morph": the weight follows a (coarticulation co-varies
-%                   with the sibilant).
-%   Model     path to the model .mat, or the loaded model struct
-%             (default: sibilant_model.mat next to this file; cached)
-%   Seed      integer: makes the noise, talker choice and template choice
-%             reproducible ([] = use MATLAB's global random stream)
-%   Template  which excitation template to use (1..nTemplates; [] = random)
+%   VowelContext  vowel filter (default 0.5): a number in [0, 1] = fixed
+%             interpolation at that weight between the /sh/-context (0,
+%             30 trials) and /s/-context (1, 5 trials, noisier) vowel;
+%             "sh" / "mid" / "s" = 0 / 0.5 / 1; "morph" = the weight follows a
+%   Model     path to the model .mat, or the loaded struct (default
+%             sibilant_model.mat next to this file; cached)
+%   Seed      integer: reproducible noise, talker and template choice
+%             ([] = MATLAB's global random stream)
+%   Template  excitation template (1..nTemplates; [] = random)
 %   Level     vowel RMS level in dBFS (default -20)
 %   PadMs     [before after] silence in ms (default [50 50])
-%   SibDur    override the sibilant duration in seconds ([] = talker's)
+%   SibDur    sibilant duration in s ([] = the talker's)
 %   Play      play the result (default false)
 %
 % Outputs:
 %   y     column vector, mono, at Fs (44100 Hz)
 %   Fs    sample rate
-%   info  struct: talker, a, vowel, durations, sibilant peak frequencies,
-%         onset/offset sample indices of the sibilant and vowel, template,
-%         seed, the words the token was interpolated between, and
-%         vowelContext / vowelA (the option as given and the vowel weight
-%         actually used).
+%   info  struct: talker, a, vowel, the words interpolated between,
+%         durations, sibilant peak frequency per slice, sibilant level re
+%         vowel, onset/offset samples of sibilant and vowel, vowelContext
+%         (as given) and vowelA (the weight used), template and
+%         templateF0Hz, seed, and scaledBy (< 1 if the token was scaled to
+%         keep its peak at 0.99)
 %
 % Examples:
 %   [y, Fs] = SynthSibilant(0, "i");   sound(y, Fs)          % "she", random talker
 %   [y, Fs] = SynthSibilant(1, "u", "pert6P02"); sound(y, Fs) % "sue", one talker
-%   for a = 0:0.1:1, y = SynthSibilant(a, "i", "pert6P02", 'Seed', 1); ... end
 %   y = SynthSibilant(0.5, "u", "pert6P02", 'VowelContext', "morph");  % coarticulating vowel
 %
-% See also BuildSibilantModel, SynthSibilantTalkers.
+% See also BuildSibilantModel, SynthSibilantTalkers, WriteSibilantContinuum.
 
 arguments
     a (1,1) double {mustBeGreaterThanOrEqual(a, 0), mustBeLessThanOrEqual(a, 1)}

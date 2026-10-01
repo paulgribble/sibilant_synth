@@ -5,28 +5,27 @@ function manifest = WriteSibilantContinuum(outDir, opts)
 %   manifest = WriteSibilantContinuum("stimuli", 'A', 0:0.125:1, 'Vowels', ["i" "u"], ...
 %                                     'Talkers', ["pert6P02" "pert8P01"], 'Seed', 42)
 %
-% Synthesises every talker x vowel x a combination with SynthSibilant, writes
+% Synthesises every talker x vowel x a with SynthSibilant, writes
 % <outDir>/<talker>_<vowel>_a<a>.wav (16-bit, 44.1 kHz) and
-% <outDir>/manifest.tsv with one row per file: filename, talker, vowel, a,
-% seed, template, vowel_context (the weight of the /s/-context vowel filter
-% used: constant for a fixed vowel, equal to a for "morph"), sibilant and
-% vowel duration (s), sibilant onset and vowel onset/offset (samples),
-% sibilant level re. vowel (dB), sibilant peak (Hz, mid slice). The manifest
-% documents the set and is rewritten whole by every call.
-% perception_experiment/RunPerceptionExperiment finds the WAVs by their file
-% name and synthesises the ones it needs but does not find (appending their
-% rows to the manifest), so writing a set in advance is optional.
+% <outDir>/manifest.tsv, one row per file: filename, talker, vowel, a, seed,
+% template, vowel_context (weight of the /s/-context vowel filter: constant
+% for a fixed vowel, equal to a for "morph"), sibilant and vowel duration
+% (s), sibilant onset and vowel onset/offset (samples), sibilant level re
+% vowel (dB), sibilant peak (Hz, mid slice). The manifest is rewritten whole
+% by every call. RunPerceptionExperiment finds WAVs by file name and
+% synthesises the ones it lacks (appending rows to the manifest), so writing
+% a set in advance is optional.
 %
 % Options:
 %   A         continuum steps (default 0:0.1:1)
 %   Vowels    ["i" "u"] (default both)
 %   Talkers   string array of ids, or "all" (default) for every model talker
-%   Seed      base seed; token (t, v, a) uses Seed + a fixed offset so the
-%             noise differs between tokens but the set is reproducible ([] =
-%             not reproducible)
-%   Template  excitation template index passed to SynthSibilant (default 1,
-%             so every token of a continuum has the same pitch and voice
-%             quality; [] = random per token, chosen from the seeded stream)
+%   Seed      base seed; token (t, v, a) uses Seed + a fixed offset, so the
+%             noise differs between tokens but the set is reproducible
+%             ([] = not reproducible)
+%   Template  excitation template passed to SynthSibilant (default 1, so
+%             every token of a continuum has the same pitch and voice
+%             quality; [] = random per token from the seeded stream)
 %   VowelContext  passed to SynthSibilant (default 0.5 = the same neutral
 %             vowel at every a; "morph" = coarticulation follows a)
 %   Level, PadMs, Model   passed to SynthSibilant

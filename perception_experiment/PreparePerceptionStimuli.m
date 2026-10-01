@@ -4,21 +4,20 @@ function S = PreparePerceptionStimuli(stimDir, talkers, vowels, A, opts)
 %   S = PreparePerceptionStimuli(stimDir, talkers, vowels, A)
 %   S = PreparePerceptionStimuli("../stimuli", "pert6P02", ["i" "u"], 0:0.25:1)
 %
-% For every talker x vowel x a the file <stimDir>/<talker>_<vowel>_a<a>.wav
-% (the WriteSibilantContinuum naming, a with 3 decimals) is looked up. Files
-% that already exist are left alone. Missing ones are synthesised in one
-% batch with SynthSibilant, using the WriteSibilantContinuum defaults
-% (Template 1, VowelContext 0.5, Level -20 dBFS, PadMs [50 50]) so they match
-% a set written by it, and a row per new file is appended to
-% <stimDir>/manifest.tsv (created if absent; left untouched, with a warning,
-% if its columns are not the WriteSibilantContinuum ones). The noise seed of
-% a new token is derived from its file name, so regenerating a deleted file
-% gives the same token whatever else is requested.
+% For every talker x vowel x a, <stimDir>/<talker>_<vowel>_a<a>.wav (the
+% WriteSibilantContinuum naming, a with 3 decimals) is looked up. Existing
+% files are left alone; missing ones are synthesised in one batch with the
+% WriteSibilantContinuum defaults (Template 1, VowelContext 0.5, Level
+% -20 dBFS, PadMs [50 50]) so they match a set written by it, and a row per
+% new file is appended to <stimDir>/manifest.tsv (created if absent; left
+% untouched, with a warning, if its columns are not WriteSibilantContinuum's).
+% The noise seed of a new token is derived from its file name, so a deleted
+% file regenerates as the same token.
 %
 % RunPerceptionExperiment calls this before the first trial; nothing is
-% synthesised during the experiment. To run an experiment on tokens made
-% with other synthesis options, write them with WriteSibilantContinuum into
-% a folder of their own and pass that folder as StimDir.
+% synthesised during the experiment. To run on tokens made with other
+% synthesis options, write them with WriteSibilantContinuum into a folder
+% of their own and pass it as StimDir.
 %
 % Options:
 %   Regenerate  true = synthesise every requested token again, overwriting

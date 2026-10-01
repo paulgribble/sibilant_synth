@@ -4,35 +4,33 @@ function R = TestSynthSibilant(opts)
 %   R = TestSynthSibilant()                              % 3 talkers, default model
 %   R = TestSynthSibilant('Talkers', "pert6P02", 'Model', "test_model.mat")
 %
-% For each talker and vowel this
-%   1. synthesises the continuum a = 0:0.1:1 (fixed noise seed) and writes the
-%      WAVs to <OutDir>/wav/<talker>_<vowel>_a<a>.wav for listening;
-%   2. measures each synthetic sibilant the way the experiment does (three
-%      50 ms multitaper windows at mid-sibilant, lib/measureMidSpectrum) and
-%      compares the WHOLE level-normalised spectrum (1/12 octave, 500 Hz -
+% For each talker and vowel:
+%   1. synthesises a = 0:0.1:1 (fixed noise seed) and writes the WAVs to
+%      <OutDir>/wav/<talker>_<vowel>_a<a>.wav for listening;
+%   2. measures each synthetic sibilant as the experiment does (three 50 ms
+%      multitaper windows at mid-sibilant, lib/measureMidSpectrum) and
+%      compares the whole level-normalised spectrum (1/12 octave, 500 Hz -
 %      16 kHz) with the talker's real trials of the two words
-%      (extracted_data/participants/<pid>_spectra.tsv): endpoint spectra
-%      against the real mean +- sd, and every token's position along the
-%      talker's own /sh/ -> /s/ spectral-difference axis (0 = real /sh/ mean,
-%      1 = real /s/ mean), which should rise monotonically with a;
-%   3. tracks F1/F2 of the synthetic vowel (EstimateFormants from the
-%      experiment's lib, search ranges from the roster's sex column) at
-%      a = 0 and a = 1 and compares them with the mean
-%      tracks of the talker's real she/see (shoe/sue) vowels, re-tracked here
-%      with the same preset, to check that
-%      the vowel is realistic and that the /sh/-vs-/s/ coarticulatory
-%      difference is carried over. The WAVs and sibilant checks use
-%      SynthSibilant's default fixed (neutral) vowel; the endpoints for this
-%      vowel check are synthesised again with 'VowelContext', "morph", since
-%      only then does the vowel filter follow the word;
+%      (extracted_data/participants/<pid>_spectra.tsv): endpoints against
+%      the real mean +- sd, and every token's position on the talker's own
+%      /sh/ -> /s/ spectral axis (0 = real /sh/ mean, 1 = real /s/ mean),
+%      which should rise monotonically with a;
+%   3. tracks F1/F2 of the synthetic vowel at a = 0 and 1 (EstimateFormants
+%      from the experiment's lib, search ranges from the roster's sex
+%      column) against the mean tracks of the talker's real she/see
+%      (shoe/sue) vowels, re-tracked with the same preset, to check that
+%      the vowel is realistic and carries the /sh/-vs-/s/ coarticulatory
+%      difference. These endpoints are synthesised with 'VowelContext',
+%      "morph", since only then does the vowel follow the word; the WAVs
+%      and sibilant checks use the default fixed vowel;
 %   4. saves figures to <OutDir>/fig: spectrograms of the endpoints and
-%      midpoint, sibilant spectra along the continuum, endpoint spectra vs the
-%      real clouds, whole-spectrum position vs a, and the F1/F2 tracks.
+%      midpoint, sibilant spectra along the continuum, endpoint spectra vs
+%      the real clouds, position vs a, and the F1/F2 tracks.
 %
-% Returns a table R with one row per talker x vowel: whole-spectrum position
-% of the endpoints, synthetic and real mid-vowel F1/F2 for both words, and the
-% F2-onset difference between the two words (synthetic vs real).
-% ValidateSynthSibilant does the same over all talkers without figures.
+% Returns a table R, one row per talker x vowel: endpoint positions,
+% synthetic and real mid-vowel F1/F2 for both words, and the F2-onset
+% difference between the words (synthetic vs real). ValidateSynthSibilant
+% does the same over all talkers without figures.
 %
 % Options: Talkers ("auto" = 3 talkers spread over the model), Model (path),
 % OutDir (default test_output next to this file), ExperimentDir, RawDir, Seed.

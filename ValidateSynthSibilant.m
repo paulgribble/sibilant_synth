@@ -4,43 +4,35 @@ function V = ValidateSynthSibilant(opts)
 %   V = ValidateSynthSibilant()
 %   V = ValidateSynthSibilant('Talkers', ["pert6P02" "pert0P01"])
 %
-% Compares synthetic tokens with the real recordings using the ENTIRE
-% mid-sibilant spectrum (not a summary statistic), plus the mid-vowel
-% formants:
+% Compares synthetic tokens with the real recordings on the ENTIRE
+% mid-sibilant spectrum (not a summary statistic) plus mid-vowel formants:
 %
 %  1. Real distribution. The experiment's per-trial mid-sibilant mic spectra
 %     (extracted_data/participants/*_spectra.tsv; practice + baseline, i.e.
-%     unshifted) are put on a 1/12-octave grid, 500 Hz - 16 kHz, and level-
-%     normalised (spectrumFeatures) -> one 61-dimensional shape vector per
-%     trial.
-%  2. Synthetic tokens are synthesised for every talker, both vowels,
-%     a = 0:0.1:1, and measured identically (measureMidSpectrum).
-%  3. ENDPOINT FIT. For each talker x word, the synthetic endpoint's distance
-%     from the talker's real trials of that word is the RMS over bins of
-%     (synthetic - real mean) / real SD ("rms z"). For comparison the same
-%     quantity is computed for every real trial (leave-one-out). A synthetic
-%     endpoint with rms z at or below the real trials' median sits inside the
-%     talker's own cloud.
-%  4. CONTINUUM. A shrinkage Fisher discriminant (fitSpectrumLda) is trained
-%     per vowel on ALL real trials (/sh/ words vs /s/ words, all talkers) and
-%     rescaled so the /sh/ class mean scores 0 and the /s/ class mean 1
-%     ("ahat"). Applied to the synthetic continuum this gives the whole-
-%     spectrum position of every token; ahat(a) should rise monotonically
-%     from ~0 to ~1, and the endpoints should fall within the real classes'
-%     score distributions. Because talkers differ in where their /sh/ and /s/
-%     energy sits, the same tokens are also projected on each TALKER'S OWN
-%     axis (real /s/ mean - real /sh/ mean of that talker; "pos"), which is
-%     the within-talker whole-spectrum position that a listener hearing one
-%     talker would be tracking.
+%     unshifted) on a 1/12-octave grid, 500 Hz - 16 kHz, level-normalised
+%     (spectrumFeatures): one 61-dimensional shape vector per trial.
+%  2. Synthetic tokens for every talker, both vowels, a = 0:0.1:1, measured
+%     identically (measureMidSpectrum).
+%  3. ENDPOINT FIT. Per talker x word, the RMS over bins of (synthetic -
+%     real mean) / real SD ("rms z"), and the same for every real trial
+%     (leave-one-out) for scale. A synthetic endpoint at or below the real
+%     trials' median sits inside the talker's own cloud.
+%  4. CONTINUUM. A shrinkage Fisher discriminant (fitSpectrumLda) trained
+%     per vowel on ALL real trials (/sh/ vs /s/ words, all talkers), rescaled
+%     so the class means score 0 and 1 ("ahat"), gives the whole-spectrum
+%     position of every synthetic token, which should rise monotonically
+%     from ~0 to ~1. Because talkers differ in where their /sh/ and /s/
+%     energy sits, the tokens are also projected on each TALKER'S OWN axis
+%     (that talker's real /s/ mean - real /sh/ mean; "pos"), the
+%     within-talker position a listener hearing one talker would track.
 %  5. VOWEL. Mid-vowel F1/F2 of the synthetic endpoints (EstimateFormants,
-%     experiment lib, search-range preset from the roster's sex column)
-%     vs the talker's real means (all_extracted.tsv). The real means come
-%     from the experiment repo's extraction, which uses the same column, so
-%     the two sides only match if that extraction was re-run after the
-%     column last changed. The
-%     endpoints for this check are synthesised with 'VowelContext', "morph"
-%     (vowel filter follows the word); the sibilant checks use the default
-%     fixed vowel, which does not affect the sibilant.
+%     experiment lib, search-range preset from the roster's sex column) vs
+%     the talker's real means (all_extracted.tsv). The real means come from
+%     the experiment repo's extraction, which uses the same column, so that
+%     extraction must postdate the column's last change. These endpoints
+%     are synthesised with 'VowelContext', "morph" (filter follows the
+%     word); the sibilant checks use the default fixed vowel, which does
+%     not affect the sibilant.
 %
 % Writes <OutDir>/validation_all.tsv (one row per talker x vowel) and
 % <OutDir>/fig/validation_all.png. Returns a struct with the table and the

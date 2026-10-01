@@ -10,107 +10,95 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %   RunPerceptionExperiment("P01", 'Practice', 0)                    % no practice block
 %   [T, dataFile] = RunPerceptionExperiment("sim", 'Simulate', [0.45 0.06 0.02])
 %
-% On every trial one synthesised token is played and the participant says
-% whether it began with /sh/ or /s/, by clicking one of two buttons or
-% pressing a key (F = left button, J = right button by default). The
-% stimulus list is every Talker x Vowel x A combination, Reps times: each
-% repetition is one block holding every combination once, shuffled afresh,
-% so the levels are spread evenly over the session.
+% On every trial one token is played and the participant says whether it
+% began with /sh/ or /s/, by clicking one of two buttons or pressing a key
+% (F = left, J = right by default). The buttons read she / see for
+% 'Vowels', "i", shoe / sue for "u", and "she / shoe" / "see / sue" when
+% the vowels are mixed. The stimulus list is every Talker x Vowel x A
+% combination, Reps times: each repetition is one freshly shuffled block of
+% every combination, so the levels are spread evenly over the session.
 %
 % WEIGHTED REPS. Reps may instead give a count per level of A, to spend
-% fewer trials on the easy endpoints and more near the boundary. The
-% session then has max(Reps) blocks, played one after another. A level with
-% n repetitions is placed in n of those blocks, spaced max(Reps)/n blocks
-% apart from a random start (its own for every level), so it appears at
-% most once per block and is spread over the whole session; each block is
-% then shuffled. Block sizes therefore vary, and a sparse level may first
-% appear a few blocks in. The suggested design, in the example above, has
-% 17 levels with steps of 0.025 between 0.4 and 0.6, 0.05 out to 0.3 and
-% 0.7, 0.1 out to 0.2 and 0.8, then the endpoints:
+% fewer trials on the easy endpoints and more near the boundary. There are
+% then max(Reps) blocks; a level with n repetitions is placed in n of them,
+% max(Reps)/n blocks apart from a random start of its own, so it appears at
+% most once per block and is spread over the session; each block is then
+% shuffled. Block sizes vary and a sparse level may first appear a few
+% blocks in. The suggested design (example above) has 17 levels: steps of
+% 0.025 between 0.4 and 0.6, 0.05 out to 0.3 and 0.7, 0.1 out to 0.2 and
+% 0.8, then the endpoints:
 %   A    = [0 0.2 0.3 0.35 0.4 0.425 0.45 0.475 0.5 0.525 0.55 0.575 0.6 0.65 0.7 0.8 1]
 %   Reps = [3 3   4   5    7   8     9    10    12  10    9    8     7   5    4   3   3]   % 110 trials
 %   Reps = [5 5   6   8    10  12    13   15    17  15    13   12    10  8    6   5   5]   % 165 trials
-% With 110 trials there are 12 blocks: a = 0.5 is in all of them, 0.475 and
-% 0.525 in 10, the endpoints in 3 blocks 4 apart. In simulation (pse
-% 0.45 - 0.6, sigma 0.04 - 0.08, 2 % lapses) it estimates the pse with an
-% SD of 0.011 - 0.020 per session, about 25 - 30 % better than 10
-% repetitions of each of 0, 0.3:0.05:0.7, 1, and the slope to about
-% +/- 20 %; the 0.025 steps mainly put more points on the rising part of
-% the curve for a steep listener. A scalar Reps gives the same order as
-% before this option existed, for a given Seed.
+% With 110 trials there are 12 blocks: a = 0.5 in all, 0.475 and 0.525 in
+% 10, the endpoints in 3 blocks 4 apart. In simulation (pse 0.45 - 0.6,
+% sigma 0.04 - 0.08, 2 % lapses) it estimates the pse with an SD of
+% 0.011 - 0.020 per session, 25 - 30 % better than 10 repetitions of each
+% of 0, 0.3:0.05:0.7, 1, and the slope to about +/- 20 %.
 %
-% Every trial is written to a .tsv file as soon as the response is made.
-%
-% The session opens with a PRACTICE block of the clear endpoint tokens
-% (a = 0 and a = 1 of every Talker x Vowel, whatever A is; Practice shuffled
-% repetitions of them), so the participant learns the task and the keys on
-% unambiguous words. It runs exactly like the main trials (no feedback) and
-% is followed by a screen announcing the main part. Practice trials are
-% saved in the same file with phase = "practice"; FitPsychometric ignores
-% them. The experimenter sees in the command window how many were answered
-% as expected.
-%
-% The buttons read she / see for 'Vowels', "i", shoe / sue for "u", and
-% "she / shoe" / "see / sue" when the two vowels are mixed.
+% PRACTICE. The session opens with a block of the clear endpoint tokens
+% (a = 0 and a = 1 of every Talker x Vowel, whatever A is; Practice
+% shuffled repetitions of each), run exactly like the main trials (no
+% feedback) and followed by a screen announcing the main part. Practice
+% trials are saved in the same file with phase = "practice"; FitPsychometric
+% ignores them. The command window reports how many were answered as
+% expected.
 %
 % STIMULI are WAV files, never synthesised during the trials: before the
 % first trial PreparePerceptionStimuli looks in StimDir for
 % <talker>_<vowel>_a<a>.wav (the WriteSibilantContinuum naming) and
-% synthesises in one batch whatever is missing; all WAVs are then read into
-% memory. Playback is at the level of the files (vowel RMS -20 dBFS); set the
-% listening level with the system volume before the participant starts.
+% synthesises in one batch whatever is missing; all WAVs are then read
+% into memory. Playback is at the level of the files (vowel RMS -20 dBFS);
+% set the listening level with the system volume.
 %
 % TRIAL: buttons greyed, ItiS of silence, the token plays, the buttons
-% become active at the END of the token (earlier clicks and key presses are
-% ignored, which also stops a held-down key from answering the next trial),
-% the response is shown for 150 ms. There is no feedback and no time limit.
-% rt_s is measured from the start of playback (so it includes the token and
-% the unknown audio output latency; treat it as approximate). ESCAPE or
-% closing the window ends the session early; the trials done so far are
-% already in the file. The window closes by itself when the session ends;
-% if one is ever left behind (session interrupted with ctrl-C), click its
-% close box twice.
+% become active at the END of the token (earlier clicks and key presses
+% are ignored, so a held key cannot answer the next trial), the response
+% is shown for 150 ms. No feedback, no time limit. rt_s is measured from
+% the start of playback, so it includes the token and the unknown audio
+% output latency: approximate. Every trial is written to the .tsv as soon
+% as it is answered. ESCAPE or closing the window ends the session early.
+% The window closes by itself at the end; if one is left behind after a
+% ctrl-C, click its close box twice.
 %
 % Options (name, value):
-%   A           continuum levels, each in [0, 1] with at most 3 decimals
-%               (default 0:0.1:1)
+%   A           continuum levels in [0, 1], at most 3 decimals (default 0:0.1:1)
 %   Reps        repetitions of every Talker x Vowel x A combination
-%               (default 10), or a vector with one count per level of A,
-%               in the order A is given (its levels must then be distinct)
-%   Practice    repetitions of each endpoint (a = 0, a = 1) per Talker x Vowel
-%               in the practice block (default 3, i.e. 6 trials for one
-%               talker and vowel; 0 = no practice)
+%               (default 10), or a vector with one count per level of A, in
+%               the order A is given (its levels must then be distinct)
+%   Practice    repetitions of each endpoint per Talker x Vowel in the
+%               practice block (default 3, i.e. 6 trials for one talker and
+%               vowel; 0 = no practice)
 %   Vowels      "i" (she/see, default), "u" (shoe/sue) or ["i" "u"] (mixed)
 %   Talkers     one or more talker ids (default "pert4P17"; see
-%               SynthSibilantTalkers). With several, they are intermixed.
+%               SynthSibilantTalkers); several are intermixed
 %   StimDir     folder of the WAVs (default ../stimuli next to this folder)
 %   DataDir     where the data file goes (default data/ in this folder)
 %   Keys        [left right] response keys (default ["f" "j"])
-%   ShSide      "left" (default) or "right": the side of the /sh/ button and
+%   ShSide      "left" (default) or "right": side of the /sh/ button and
 %               key, for counterbalancing over participants
 %   ItiS        silence between the response and the next token, s (default 0.75)
-%   BreakEvery  offer a self-paced break every this many main trials (default 0 = never)
-%   Seed        seed of the trial order ([] = from the clock; the one used is
-%               saved in the .json file). The main order for a given Seed
+%   BreakEvery  self-paced break every this many main trials (default 0 = never)
+%   Seed        seed of the trial order ([] = from the clock; the one used
+%               is saved in the .json). The main order for a given Seed
 %               does not depend on Practice.
 %   Regenerate  true = synthesise the needed WAVs again even if they exist
 %   WindowState "maximized" (default), "fullscreen" or "normal"
 %   Simulate    [] (default) = run the experiment. [pse sigma lapse] = no
 %               window, no sound: a simulated listener answers "s" with
 %               probability lapse + (1 - 2 lapse) / (1 + exp(-(a - pse)/sigma)),
-%               practice trials included.
-%               For checking the pipeline and FitPsychometric.
+%               practice included. For checking the pipeline and FitPsychometric.
 %
 % Output files, in DataDir:
 %   <participant>_<yyyymmdd_HHMMSS>.tsv   one row per completed trial:
 %       participant, phase (practice / main), trial (counted within the
-%       phase), block (repetition number; 0 in practice), talker, vowel, a,
+%       phase), block (repetition; 0 in practice), talker, vowel, a,
 %       filename, response ("sh" or "s"), resp_s (0 = /sh/, 1 = /s/), word
-%       (the word chosen: she / see / shoe / sue), input (key / button /
-%       sim), rt_s, sh_side, time (HH:mm:ss.SSS at the response)
-%   <participant>_<yyyymmdd_HHMMSS>.json  the options (reps is the count per
-%       level of the sorted A), the trial-order seed, the stimulus folder and
-%       whether the session was completed
+%       (she / see / shoe / sue), input (key / button / sim), rt_s,
+%       sh_side, time (HH:mm:ss.SSS at the response)
+%   <participant>_<yyyymmdd_HHMMSS>.json  the options (reps as the count per
+%       level of the sorted A), the trial-order seed, the stimulus folder
+%       and whether the session was completed
 %
 % Returns the trial table T and the path of the .tsv. Analyse with
 % FitPsychometric(dataFile).
