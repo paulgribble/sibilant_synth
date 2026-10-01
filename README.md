@@ -249,8 +249,8 @@ rates, by default one symmetric rate in [0, 0.1] (`Lapse`: `"symmetric"`,
 width of `F`, the lapse rates, the deviance, 95 % percentile intervals from
 a parametric bootstrap (`NBoot`, default 1000) and a bootstrap
 goodness-of-fit p value. It prints a summary, writes `<data file>_fit.tsv`
-and saves `<data file>_fit.png` (proportions with Wilson intervals, fitted
-curves, boundary and its interval).
+and saves `<data file>_fit.png` (proportions, fitted curves, boundary and
+its interval; `ErrorBars` adds a 95 % Wilson interval to each proportion).
 
 Checked on simulated listeners (boundary 0.45, σ 0.06, 11 levels, 300 data
 sets per cell): the boundary is recovered without bias (SD 0.024 at 10 reps

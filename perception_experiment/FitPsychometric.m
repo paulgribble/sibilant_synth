@@ -45,9 +45,11 @@ function fit = FitPsychometric(data, opts)
 %   NBoot     bootstrap replicates (default 1000; 0 = no intervals)
 %   Seed      seed of the bootstrap (default 1)
 %   Plot      draw the figure (default true): per fit, the proportion of
-%             "s" answers at each level with its 95 % Wilson interval, the
-%             fitted curve, a dotted line at the boundary and, under the
-%             0.5 line, a bar for the boundary's bootstrap interval
+%             "s" answers at each level, the fitted curve, a dotted line at
+%             the boundary and, under the 0.5 line, a bar for the
+%             boundary's bootstrap interval
+%   ErrorBars also draw a vertical 95 % Wilson (binomial score) interval
+%             through each proportion (default false)
 %   Save      write <data file>_fit.tsv and, if Plot, <data file>_fit.png
 %             next to the (first) data file (default true; ignored for a
 %             table input)
@@ -76,6 +78,7 @@ arguments
     opts.NBoot (1,1) double {mustBeInteger, mustBeNonnegative} = 1000
     opts.Seed (1,1) double = 1
     opts.Plot (1,1) logical = true
+    opts.ErrorBars (1,1) logical = false
     opts.Save (1,1) logical = true
 end
 
@@ -316,10 +319,12 @@ for g = 1:numel(fit)
     f = fit(g);
     c = pal(min(colourSlot(f, g), size(pal, 1)), :);
     L = f.levels;
-    [lo, hi] = wilson(L.k, L.n);
     xd = L.a + (g - (numel(fit) + 1) / 2) * 0.012 * diff(xl);   % points of several fits side by side, not on top of each other
-    for i = 1:height(L)                                  % 95 % binomial (Wilson) interval of each point
-        plot(ax, xd([i i]), [lo(i) hi(i)], '-', 'Color', [c 0.45], 'LineWidth', 1, 'HandleVisibility', 'off');
+    if opts.ErrorBars                                    % 95 % binomial (Wilson) interval of each point
+        [lo, hi] = wilson(L.k, L.n);
+        for i = 1:height(L)
+            plot(ax, xd([i i]), [lo(i) hi(i)], '-', 'Color', [c 0.45], 'LineWidth', 1, 'HandleVisibility', 'off');
+        end
     end
     hl(g) = plot(ax, aa, f.predict(aa), '-', 'Color', c, 'LineWidth', 2);
     plot(ax, xd, L.p, 'o', 'MarkerSize', 8, 'MarkerFaceColor', c, 'MarkerEdgeColor', 'w', 'LineWidth', 1.5, 'HandleVisibility', 'off');

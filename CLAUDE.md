@@ -279,6 +279,8 @@ regenerates them).
   look for it (what a function does and its options in its header; how the
   system works and how to use it in `README.md`; the paper-ready method and
   the comparison with Lane et al. in `methods.md`).
+- **Prefer concise descriptions to verbose text; use fewer words when you
+  can** (Paul, 2026-10-01). A short, precise statement beats a long one.
 
 ## Open ideas (not done, ask Paul first)
 
