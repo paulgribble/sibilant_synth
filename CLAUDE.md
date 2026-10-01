@@ -73,6 +73,38 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     feedback, rows tagged `phase = "practice"`, `trial` counted within
     phase, `block` 0; FitPsychometric keeps only `phase == "main"`; the
     main order for a given `Seed` does not depend on `Practice`.
+  - `RunPsiExperiment(participant, ...)` (2026-10-01, Paul asked for a
+    Kontsevich & Tyler 1999 version): same GUI, practice block and data
+    format, but each trial's level is chosen by `PsiMethod` (handle class:
+    posterior on a grid μ 0:0.005:1 × 41 log-spaced σ in [0.005 0.5] ×
+    lapse [0 .01 .02 .04 .08], uniform prior; next level = minimum
+    expected entropy of the (μ, log σ) marginal, Prins 2013; `next` takes
+    4 ms). Options `Levels` (0:0.01:1 since 2026-10-01 at Paul's request,
+    was 0:0.02:1; all synthesised up front, pert4P17 i/u are in `stimuli/`),
+    `MaxTrials` (100 per talker × vowel), `StopSd` ([] or
+    [sdMu sdLogSigma], checked from `MinTrials` 30), `SigmaRange`, `Lapse`,
+    `Function`; several talker × vowel functions are interleaved in rounds.
+    Rows carry `mu_hat sigma_hat mu_sd logsigma_sd` (no `block`); the
+    `.json` has `estimates`. The GUI code is a copy of
+    RunPerceptionExperiment's (its nested-callback design made a shared
+    helper a bigger refactor than the duplication); change both together.
+    Simulation (2026-10-01, scratch not kept): pse {0.45 0.55} × σ
+    {0.02 0.04 0.07} × lapse {0 0.03}, 300 sessions × 200 trials each,
+    posterior means recorded per trial, FitPsychometric MLE at 50:25:150,
+    and the 136-trial constant design on the same listeners. Per-session
+    pse RMSE 0.007–0.029 (N 50), 0.005–0.021 (100), 0.004–0.016 (150);
+    SD(log σ) 0.32–0.41, 0.22–0.26, 0.18–0.21; constant 136: 0.008–0.019
+    and 0.26–0.80. Posterior SDs match the RMSE within ~10 % (slightly
+    conservative at N 50), so they are a valid stop rule: [0.015 0.25]
+    with MaxTrials 150 → median 103–111 trials at σ ≤ 0.04, 145–168 at
+    σ 0.07 (11–29 % hit the cap); [0.02 0.30] → 75–104, none capped.
+    Trials never land at a ≤ 0.1 or ≥ 0.9, so lapses are constrained
+    only weakly; σ is biased −10 % at lapse 0 (prior mean lapse 0.03),
+    the MLE equally. Simulated with 0.02 levels; a 0.01 check (3 cells,
+    150 sessions) gave the same precision. Suggested: `MaxTrials` 100 (~4 min), or `StopSd`
+    [0.015 0.25] with `MaxTrials` 150 when the slope matters most.
+    Headless GUI test with injected keys/clicks passed (normal end);
+    Esc/close paths not run.
   - `PreparePerceptionStimuli(stimDir, talkers, vowels, A)`: finds
     `<talker>_<vowel>_a<a>.wav` by name, synthesises missing ones in a
     batch with the WriteSibilantContinuum defaults (seed hashed from the
@@ -308,8 +340,9 @@ regenerates them).
   she/shoe estimates; nothing can thicken see/sue (5 trials each).
 - Listening tests to locate the category boundary in `a`: the tooling
   exists (`perception_experiment/`) and Paul has run pilots on himself
-  (2026-09-30); a real pilot could also compare the fixed vowel with
-  `"morph"`, and a Lane-style level-only path with the mel morph.
+  (2026-09-30, constant stimuli; none yet with `RunPsiExperiment`); a real
+  pilot could also compare the fixed vowel with `"morph"`, and a
+  Lane-style level-only path with the mel morph.
 - Appraisal of Lane et al. 2007 (2026-09-17, `papers/`): their continuum
   interpolates Klatt formant amplitudes at fixed frequencies, so
   intermediate spectra are broad/bimodal; on our data the /ʃ/ resonance is

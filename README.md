@@ -14,7 +14,8 @@ SynthSibilantTalkers()                                 % the 72 talker ids
 WriteSibilantContinuum("stimuli", 'A', 0:0.1:1)        % WAVs + manifest.tsv (stimuli/ is gitignored)
 
 addpath perception_experiment
-[T, f] = RunPerceptionExperiment("P01", 'A', 0:0.1:1, 'Reps', 10, 'Vowels', "i");   % the listening experiment
+[T, f] = RunPerceptionExperiment("P01", 'A', 0:0.1:1, 'Reps', 10, 'Vowels', "i");   % the listening experiment, fixed levels
+[T, f] = RunPsiExperiment("P01", 'MaxTrials', 100);    % the same, levels chosen trial by trial (Ψ method)
 fit = FitPsychometric(f);                              % MLE psychometric function, boundary + CI
 ```
 
@@ -42,7 +43,7 @@ peak-limiting scale factor.
 | `BuildSibilantModel.m` | learns `sibilant_model.mat` from the raw recordings (needs the Dropbox raw data and the experiment repo; ~40 s with the Parallel toolbox) |
 | `TestSynthSibilant.m` | detailed per-talker check with figures and WAVs → `test_output/` |
 | `ValidateSynthSibilant.m` | whole-spectrum validation over all talkers → `test_output/validation_all.{tsv,png}` |
-| `perception_experiment/` | `RunPerceptionExperiment.m` (GUI, two-alternative identification), `PreparePerceptionStimuli.m` (synthesises the WAVs the experiment needs and `stimuli/` lacks), `FitPsychometric.m` (maximum-likelihood psychometric function); see [below](#perception-experiment-perception_experiment) |
+| `perception_experiment/` | `RunPerceptionExperiment.m` (GUI, two-alternative identification, fixed levels), `RunPsiExperiment.m` (the same with levels chosen adaptively by `PsiMethod.m`, the Ψ method), `PreparePerceptionStimuli.m` (synthesises the WAVs the experiment needs and `stimuli/` lacks), `FitPsychometric.m` (maximum-likelihood psychometric function); see [below](#perception-experiment-perception_experiment) |
 | `lib/` | shared measurement helpers (mid-sibilant multitaper spectrum, whole-spectrum features, discriminant) |
 | `sibilant_model.mat` | the learned model, 72 talkers, ~22 MB |
 | `.gitignore` | `test_output/` and `stimuli/` (both regenerable), `perception_experiment/data/` (participant data), MATLAB autosave files, `.DS_Store` |
@@ -211,6 +212,29 @@ The session opens with a **practice block** of the endpoint tokens
 shuffled repetitions of each, 0 = none), run like the main trials with no
 feedback and followed by a screen announcing the main part.
 
+**`RunPsiExperiment(participant, ...)`** is the adaptive alternative: the
+same task, window, keys, practice block and data columns, but the level of
+each trial is chosen while the session runs, by the Ψ method of Kontsevich
+& Tyler (1999; class `PsiMethod`). A Bayesian posterior over the boundary
+μ, the scale σ and a lapse rate is kept for every talker × vowel, and the
+next trial goes to the level (`Levels`, default `0:0.01:1`) expected to
+reduce the uncertainty about μ and log σ most, lapse marginalised out
+(Prins 2013). Trials cluster at the boundary estimate and about one σ
+either side of it, so no grid has to be chosen in advance and fewer trials
+give the same precision. A function ends after `MaxTrials` (default 100)
+or, with `StopSd = [sdMu sdLogSigma]`, as soon as both posterior SDs are
+that small (checked from `MinTrials`, default 30); several talker × vowel
+functions are interleaved. Each trial row carries the posterior after it
+(`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, no `block` column) and the
+`.json` the final estimate per function; `FitPsychometric` reads the file
+as usual. In simulation over the pilot range (boundary 0.45–0.55, σ
+0.02–0.07, lapse 0–3 %) 100 trials give a boundary RMSE of 0.005–0.021
+(≈ 0.3 σ) and σ to ±22–26 % whatever the true boundary, where the
+136-trial constant design gives 0.008–0.019 and ±26–80 %; the posterior
+SDs track the real error within ~10 %, so `StopSd = [0.015 0.25]` with
+`MaxTrials` 150 ends a steep listener's session after ~105 trials and a
+shallow one's at 145–150.
+
 *Stimuli* are WAV files, never synthesised during the trials. Before the
 first trial `PreparePerceptionStimuli` looks in `StimDir` (default
 `stimuli/`) for `<talker>_<vowel>_a<a>.wav`, synthesises whatever is missing
@@ -235,7 +259,7 @@ as it is answered.
 `sh_side`, `time`; plus a `.json` with the options, the trial-order seed and
 whether the session completed. `data/` is gitignored.
 `'Simulate', [pse sigma lapse]` replaces window and participant by a
-simulated logistic listener, to try the pipeline.
+simulated logistic listener, to try the pipeline (both functions).
 
 **`FitPsychometric(file, ...)`** reads one or more data files (or a trial
 table), drops the practice trials and fits, per vowel by default (`By`),

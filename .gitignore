@@ -10,6 +10,6 @@ slprj/
 .DS_Store
 stimuli/
 
-# Participant data and fits written by perception_experiment/RunPerceptionExperiment and FitPsychometric
+# Participant data and fits written by perception_experiment/RunPerceptionExperiment, RunPsiExperiment and FitPsychometric
 perception_experiment/data/
 

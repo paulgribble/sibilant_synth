@@ -108,7 +108,8 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 % Returns the trial table T and the path of the .tsv. Analyse with
 % FitPsychometric(dataFile).
 %
-% See also FitPsychometric, PreparePerceptionStimuli, WriteSibilantContinuum.
+% See also RunPsiExperiment (the same task with adaptively chosen levels),
+% FitPsychometric, PreparePerceptionStimuli, WriteSibilantContinuum.
 
 arguments
     participant (1,1) string

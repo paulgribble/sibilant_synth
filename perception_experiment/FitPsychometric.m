@@ -1,5 +1,5 @@
 function fit = FitPsychometric(data, opts)
-% FitPsychometric  Maximum-likelihood psychometric function for a RunPerceptionExperiment data file.
+% FitPsychometric  Maximum-likelihood psychometric function for a RunPerceptionExperiment or RunPsiExperiment data file.
 %
 %   fit = FitPsychometric("data/P01_20260917_141500.tsv")
 %   fit = FitPsychometric(["data/P01_a.tsv" "data/P01_b.tsv"])        % sessions pooled
@@ -67,7 +67,7 @@ function fit = FitPsychometric(data, opts)
 %   boot       table of the bootstrap replicates
 %   predict    function handle, P("s") at any a
 %
-% See also RunPerceptionExperiment.
+% See also RunPerceptionExperiment, RunPsiExperiment.
 
 arguments
     data
