@@ -221,12 +221,16 @@ next trial goes to the level (`Levels`, default `0:0.01:1`) expected to
 reduce the uncertainty about μ and log σ most, lapse marginalised out
 (Prins 2013). Trials cluster at the boundary estimate and about one σ
 either side of it, so no grid has to be chosen in advance and fewer trials
-give the same precision. A function ends after `MaxTrials` (default 100)
+give the same precision. Each function opens with the `Opening` levels in
+random order (default `0.3:0.05:0.7`, 9 trials), so every listener first
+hears a set bracketing the middle of the continuum whatever they answer;
+those responses enter the posterior like any other. A function ends after
+`MaxTrials` (default 100, opening included)
 or, with `StopSd = [sdMu sdLogSigma]`, as soon as both posterior SDs are
 that small (checked from `MinTrials`, default 30); several talker × vowel
 functions are interleaved. Each trial row carries the posterior after it
-(`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, `lapse_hat`, no `block`
-column) and the
+(`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, `lapse_hat`, plus `pick` =
+opening / psi, no `block` column) and the
 `.json` the final estimate per function; `FitPsychometric` reads the file
 as usual, and **`PlotPsiSession(file)`** draws the diagnostics (the level
 of every trial with the running boundary estimate, the running estimate of

@@ -16,8 +16,12 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % current boundary estimate and about one sigma either side of it, where
 % the slope is measured, instead of being spread over a fixed grid, so
 % fewer trials give the same precision and no grid has to be chosen in
-% advance. With several talkers or vowels each round of trials visits every
-% function in random order.
+% advance. Each function opens with the Opening levels in random order
+% (default 0.3:0.05:0.7, 9 trials), so every listener first hears a set
+% that brackets the middle of the continuum whatever they answer; their
+% responses enter the posterior like any other, and the Psi rule chooses
+% from then on. With several talkers or vowels each round of trials visits
+% every function in random order.
 %
 % STOPPING. Each function ends after MaxTrials trials, or earlier once
 % (from MinTrials on) the posterior SD of mu is at most StopSd(1) and that
@@ -43,6 +47,9 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % Options (name, value), those of RunPerceptionExperiment unless noted:
 %   Levels      levels a trial may be placed at, in [0, 1], at most 3 decimals
 %               (default 0:0.01:1; all are synthesised up front)
+%   Opening     levels of the first trials of every function, played in
+%               random order before the Psi rule starts choosing (default
+%               0.3:0.05:0.7; [] = none). They count towards MaxTrials.
 %   MaxTrials   trials per talker x vowel (default 100)
 %   StopSd      [] (default) = run MaxTrials; [sdMu sdLogSigma] = stop a
 %               function once both posterior SDs are at most these
@@ -53,15 +60,17 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 %   Practice    endpoint repetitions per talker x vowel in the practice block (default 3)
 %   Vowels, Talkers, StimDir, DataDir, Keys, ShSide, ItiS, BreakEvery,
 %   Regenerate, WindowState   as in RunPerceptionExperiment
-%   Seed        seed of the practice order and the order of the functions
-%               within a round; the level choice itself is deterministic
+%   Seed        seed of the practice order, the opening order and the order
+%               of the functions within a round; the Psi choice itself is
+%               deterministic
 %   Simulate    [] or [pse sigma lapse], as in RunPerceptionExperiment
 %
 % Output files, in DataDir:
 %   <participant>_<yyyymmdd_HHMMSS>.tsv   one row per trial, the columns of
-%       RunPerceptionExperiment (block omitted) plus mu_hat, sigma_hat, mu_sd,
-%       logsigma_sd, lapse_hat: the posterior of that trial's function after
-%       the response (NaN in practice)
+%       RunPerceptionExperiment (block omitted) plus pick ("opening" or
+%       "psi": how the level was chosen; "" in practice) and mu_hat,
+%       sigma_hat, mu_sd, logsigma_sd, lapse_hat: the posterior of that
+%       trial's function after the response (NaN in practice)
 %   <participant>_<yyyymmdd_HHMMSS>.json  the options, the seed, and per
 %       talker x vowel the final estimate (n, why it stopped, mu, sigma,
 %       their SDs and 95 % credible intervals, lapse, slope, width)
@@ -73,6 +82,7 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 arguments
     participant (1,1) string
     opts.Levels (1,:) double {mustBeInRange(opts.Levels, 0, 1)} = 0:0.01:1
+    opts.Opening (1,:) double {mustBeInRange(opts.Opening, 0, 1)} = 0.3:0.05:0.7
     opts.MaxTrials (1,1) double {mustBeInteger, mustBePositive} = 100
     opts.StopSd (1,:) double {mustBePositive} = []
     opts.MinTrials (1,1) double {mustBeInteger, mustBeNonnegative} = 30
@@ -103,10 +113,14 @@ if opts.DataDir == "", opts.DataDir = fullfile(here, "data"); end
 if isempty(regexp(participant, '^[A-Za-z0-9\-]+$', 'once'))
     error("RunPsiExperiment:badId", "participant may contain only letters, digits and ""-"", got ""%s"".", participant);
 end
-if any(abs(opts.Levels - round(opts.Levels, 3)) > 1e-9)
-    error("RunPsiExperiment:badLevels", "Levels may have at most 3 decimals (they name the WAV files).");
+if any(abs([opts.Levels opts.Opening] - round([opts.Levels opts.Opening], 3)) > 1e-9)
+    error("RunPsiExperiment:badLevels", "Levels and Opening may have at most 3 decimals (they name the WAV files).");
 end
-levels = unique(round(opts.Levels, 3));
+opening = round(opts.Opening, 3);
+levels = unique(round([opts.Levels opening], 3));        % the opening levels are candidates too
+if numel(opening) > opts.MaxTrials
+    error("RunPsiExperiment:badOpening", "Opening has %d levels but MaxTrials is %d.", numel(opening), opts.MaxTrials);
+end
 if numel(levels) < 3, error("RunPsiExperiment:badLevels", "At least 3 distinct levels are needed."); end
 if ~isempty(opts.StopSd) && numel(opts.StopSd) ~= 2
     error("RunPsiExperiment:badStopSd", "StopSd must be [] or [sdMu sdLogSigma].");
@@ -172,6 +186,8 @@ pracOrder = zeros(numel(iPrac), opts.Practice);
 for r = 1:opts.Practice, pracOrder(:, r) = iPrac(randperm(rs, numel(iPrac))); end
 pracOrder = pracOrder(:);
 nPrac = numel(pracOrder);
+openOrder = cell(nCond, 1);                              % the opening levels of each function, shuffled
+for c = 1:nCond, openOrder{c} = opening(randperm(rs, numel(opening))); end
 
 % ------------------------------------------------------------- output files
 if ~isfolder(opts.DataDir), mkdir(opts.DataDir); end
@@ -180,7 +196,7 @@ dataFile = fullfile(opts.DataDir, participant + "_" + stamp + ".tsv");
 infoFile = fullfile(opts.DataDir, participant + "_" + stamp + ".json");
 info = struct('participant', participant, 'method', "psi", 'started', string(datetime('now')), 'completed', false, ...
               'nTrialsMax', nMax, 'nTrialsDone', 0, 'nPracticePlanned', nPrac, 'nPracticeDone', 0, ...
-              'levels', levels, 'maxTrials', opts.MaxTrials, 'minTrials', opts.MinTrials, 'stopSd', opts.StopSd, ...
+              'levels', levels, 'opening', opening, 'maxTrials', opts.MaxTrials, 'minTrials', opts.MinTrials, 'stopSd', opts.StopSd, ...
               'sigmaRange', opts.SigmaRange, 'lapse', opts.Lapse, 'func', opts.Function, 'practiceReps', opts.Practice, ...
               'vowels', vowels, 'talkers', talkers, 'stimDir', opts.StimDir, 'keys', opts.Keys, ...
               'shSide', opts.ShSide, 'itiS', opts.ItiS, 'breakEvery', opts.BreakEvery, ...
@@ -189,7 +205,7 @@ writeInfo();
 fid = fopen(dataFile, 'w');                              % 'w' flushes after every write
 if fid < 0, error("RunPsiExperiment:noFile", "Cannot write %s.", dataFile); end
 closeFile = onCleanup(@() fclose(fid));
-fprintf(fid, "participant\tphase\ttrial\ttalker\tvowel\ta\tfilename\tresponse\tresp_s\tword\tinput\trt_s\tsh_side\ttime\tmu_hat\tsigma_hat\tmu_sd\tlogsigma_sd\tlapse_hat\n");
+fprintf(fid, "participant\tphase\ttrial\ttalker\tvowel\ta\tfilename\tresponse\tresp_s\tword\tinput\trt_s\tsh_side\ttime\tpick\tmu_hat\tsigma_hat\tmu_sd\tlogsigma_sd\tlapse_hat\n");
 
 % ---------------------------------------------------------------- run
 St = struct('phase', "idle", 'abort', false, 'side', 0, 'how', "", 'rt', NaN, 't0', uint64(0));
@@ -238,7 +254,7 @@ end
         for i = 1:nPrac
             setProgress(sprintf("practice %d / %d", i, nPrac));
             if ~doTrial(pracOrder(i)), return, end
-            writeTrial("practice", i, pracOrder(i), sideSound(St.side) == "s", St.how, St.rt, []);
+            writeTrial("practice", i, pracOrder(i), sideSound(St.side) == "s", St.how, St.rt, "", []);
         end
         if nPrac > 0
             atMost = "";  if ~isempty(opts.StopSd), atMost = "at most "; end
@@ -256,13 +272,16 @@ end
                     if St.abort, return, end
                 end
                 setProgress(sprintf("%d / %d", t, nMax));
-                a = psi{ci}.next();
+                nDoneC = size(psi{ci}.history, 1);
+                if nDoneC < numel(opening), a = openOrder{ci}(nDoneC + 1);  pick = "opening";
+                else,                       a = psi{ci}.next();            pick = "psi";
+                end
                 k = stimOf(ci, abs(levels - a) < 1e-9);
                 if ~doTrial(k), return, end
                 saidS = sideSound(St.side) == "s";
                 psi{ci}.update(a, saidS);
                 e = psi{ci}.estimate();
-                writeTrial("main", t, k, saidS, St.how, St.rt, e);
+                writeTrial("main", t, k, saidS, St.how, St.rt, pick, e);
                 if e.n >= opts.MaxTrials
                     stopped(ci) = "maxTrials";
                 elseif ~isempty(opts.StopSd) && e.n >= opts.MinTrials && e.muSd <= opts.StopSd(1) && e.logSigmaSd <= opts.StopSd(2)
@@ -374,13 +393,13 @@ end
         end
     end
 
-    function writeTrial(phase, t, k, saidS, how, rt, e)
+    function writeTrial(phase, t, k, saidS, how, rt, pick, e)
         resp = ["sh" "s"];  resp = resp(saidS + 1);
         if stim.vowel(k) == "i", words = ["she" "see"]; else, words = ["shoe" "sue"]; end
         if isempty(e), post = nan(1, 5); else, post = [e.mu e.sigma e.muSd e.logSigmaSd e.lapse]; end
-        fprintf(fid, "%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", participant, phase, t, ...
+        fprintf(fid, "%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%d\t%s\t%s\t%.3f\t%s\t%s\t%s\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", participant, phase, t, ...
                 stim.talker(k), stim.vowel(k), stim.a(k), stim.filename(k), resp, saidS, words(saidS + 1), how, rt, ...
-                opts.ShSide, string(datetime('now', 'Format', 'HH:mm:ss.SSS')), post);
+                opts.ShSide, string(datetime('now', 'Format', 'HH:mm:ss.SSS')), pick, post);
         if phase == "main", nDone = t; else, nPracDone = t; end
     end
 
