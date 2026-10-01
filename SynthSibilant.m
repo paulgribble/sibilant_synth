@@ -38,8 +38,9 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %             with the sibilant. The RMS contour follows the same weight;
 %             vowel duration and F0 are those of the excitation template.
 %             Sibilant and vowel are joined by a 10 ms cross-fade; the vowel
-%             ends with a 40 ms raised-cosine ramp (the scored vowel end is
-%             still voiced and may carry an end-of-phonation click).
+%             ends with a 120 ms raised-cosine ramp (the scored vowel end
+%             is still voiced; a short ramp there sounds like a gated-off
+%             thunk, the real offset decays over ~90 ms).
 %
 % Options (name, value):
 %   VowelContext  vowel filter (default 0.5): a number in [0, 1] = fixed
@@ -185,11 +186,12 @@ xfade = round(0.010 * Fs);                              % 10 ms sibilant -> vowe
 sib(end-xfade+1:end) = sib(end-xfade+1:end) .* cosRamp(xfade, -1);
 vow(1:xfade)         = vow(1:xfade)         .* cosRamp(xfade, +1);
 sib(1:xfade)         = sib(1:xfade)         .* cosRamp(xfade, +1);
-% Vowel offset: 40 ms ramp. The scored vowel end is where voicing is still
-% clearly audible (median -17 dB re mid-vowel) and, in some recordings, a
-% few ms after an end-of-phonation click; a 10 ms ramp (< 1 period at low
-% F0) truncated both into an audible thunk/click.
-ofade = min(round(0.040 * Fs), numel(vow));
+% Vowel offset: 120 ms ramp. The scored vowel end is where voicing is still
+% clearly audible (median -17 dB re mid-vowel), the mean RMS contour holds
+% the level up to it, and some residuals carry an end-of-phonation click
+% there. A 40 ms ramp still gated the voice off into an audible thunk; the
+% real offset decays over ~90 ms. Templates are >= 162 ms long.
+ofade = min(round(0.120 * Fs), numel(vow));
 vow(end-ofade+1:end) = vow(end-ofade+1:end) .* cosRamp(ofade, -1);
 
 pad = round(opts.PadMs / 1000 * Fs);

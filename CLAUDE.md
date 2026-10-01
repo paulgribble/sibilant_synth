@@ -50,15 +50,24 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     order typed: `max(Reps)` blocks, a level with fewer reps sits in that
     many blocks, evenly spaced from a random start; a scalar gives the same
     order per `Seed` as before; the `.json` records `reps` per sorted
-    level. Suggested design (Paul, 2026-09-30, in the doc header): 17
-    levels denser near the middle,
-    `A = [0 0.2 0.3 0.35 0.4:0.025:0.6 0.65 0.7 0.8 1]`,
-    `Reps = [3 3 4 5 7 8 9 10 12 10 9 8 7 5 4 3 3]` = 110 trials. Pilot1
-    that day had pse 0.59, σ 0.042, but Paul expects pse ≈ 0.5 and
-    shallower slopes; simulation over pse 0.45–0.6, σ 0.04–0.08 gave pse
-    SD 0.011–0.020 per probe, ~10 % better than a uniform 0.25:0.05:0.75
-    grid with the same weighting, enough for the planned 0.075 pre/post
-    shift at n = 20–30, where between-subject variance dominates.
+    level. Suggested design (2026-10-01, in the doc header): 21 levels,
+    `A = [0 0.2 0.25 0.3 0.35 0.4:0.02:0.6 0.65 0.7 0.75 0.8 1]`,
+    `Reps = [6 3 5 9 10 7 5 6 6 7 8 7 6 6 5 7 10 9 5 3 6]` = 136 trials,
+    Paul's ceiling. Paul's prior (2026-10-01): pse in 0.4–0.6, 25–75 %
+    width 0.1–0.4; he wanted a dense, heavily repeated centre for the
+    slope. Found by an exchange search on the expected Fisher information
+    (μ, log σ, symmetric lapse; mean of log SD(μ) + log SD(log σ) over a
+    5 × 5 prior grid), then 400-session checks with FitPsychometric: the
+    asymptotic optimum is bimodal (mass at ≈ 0.35 and 0.65, a centre
+    cluster, endpoints), but in finite samples a 0.05 grid loses 40–60 %
+    on the slope for steep functions (2–3 levels on the transition), so
+    the hybrid keeps the 0.02 centre. Pilot1 (2026-09-30) had pse 0.59,
+    σ 0.042. Earlier suggestions: 17 levels 0.4:0.025:0.6, 110 trials
+    (2026-09-30); 19 levels 0.4:0.02:0.6, reps peaking 14 at 0.5, 136
+    trials (2026-10-01 morning): equal at pse 0.5, 15–20 % worse at 0.4
+    or 0.6. Scratch scripts for the search are not kept; the method is
+    above. Enough for the planned 0.075 pre/post shift at n = 20–30,
+    where between-subject variance dominates.
   - `Practice` (default 3; Paul, 2026-09-17): a practice block of the
     endpoint tokens a = 0 and a = 1 per talker × vowel whatever `A` is, no
     feedback, rows tagged `phase = "practice"`, `trial` counted within
@@ -161,14 +170,19 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   excitation discontinuity along the continuum.
 - Sibilant level is relative to the vowel (data-driven, interpolated in
   dB); vowel RMS is set by `Level`. Sibilant duration interpolates
-  log-linearly. 10 ms cross-fade at the sibilant→vowel join; **40 ms
-  raised-cosine ramp at the vowel offset** (2026-09-30, Paul heard a click
-  or "thunk" at the end of some tokens: the scored vow_end is still voiced,
-  median −17 dB re mid-vowel, max −8, so the old 10 ms ramp was a hard
-  cut, under one period for the 80–100 Hz talkers; and 10 of the 288
-  residual templates carry an end-of-phonation click 2–17 ms before the end
-  that a 10 ms ramp barely touched. With 40 ms every such click sits below
-  the preceding 60 ms of residual. The onset and join ramps stay 10 ms.)
+  log-linearly. 10 ms cross-fade at the sibilant→vowel join; **120 ms
+  raised-cosine ramp at the vowel offset** (10 ms → 40 ms on 2026-09-30,
+  → 120 ms on 2026-10-01, both because Paul heard a click or "thunk" at
+  the end of tokens). Why: the scored vow_end is still voiced, median
+  −17 dB re mid-vowel, max −8; 10 of the 288 residual templates carry an
+  end-of-phonation click 2–17 ms before the end; and the mean RMS contour
+  holds the level until the end, whereas the real pert4P17 she offset is
+  15–19 dB down at vow_end and decays another 30–40 ms into noise (~90 ms
+  tail). With 40 ms the synthetic tail had no click, DC or low-frequency
+  excess, just a 40 dB fall in 15 ms: a gated offset. Paul compared 40,
+  80, 120 ms cosine and a 100 ms exponential fade on pert4P17 endpoints
+  and chose 120 ms. Templates are ≥ 162 ms, so the ramp never covers a
+  whole vowel. The onset and join ramps stay 10 ms.)
 - Outlier rejection (duration, level; > 3 robust SD) only for words with
   ≥ 10 trials — MAD on 5 see/sue trials threw out good ones. Clipped trials
   (> 0.99), sibilants < 60 ms, vowels < 80 ms are dropped. pert6P08 is
@@ -184,8 +198,8 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
 
 72 talkers × 2 vowels. Sibilant numbers from 2026-09-16 (after the mel
 morph; unchanged by the fixed-vowel default 2026-09-17, the `gender` →
-`sex` rename 2026-09-18 and the 40 ms offset ramp 2026-09-30), vowel
-numbers from 2026-09-30.
+`sex` rename 2026-09-18 and the offset ramps of 2026-09-30 and
+2026-10-01), vowel numbers from 2026-10-01.
 
 Endpoint RMS z 0.53 (/ʃ/) / 0.63 (/s/) vs real trials' 0.69 / 0.94 —
 synthetic endpoints sit inside every talker's cloud. Talker-own-axis
@@ -194,13 +208,14 @@ in a. Pooled discriminant 0.04 → 1.02, mean course mildly S-shaped;
 individual curves wobble a few hundredths on that axis (43 % strictly
 monotonic; not noise — averaging 8 seeds didn't fix it — but it's the
 population axis, not the talker's). Mid-vowel F1/F2 errors median −4/−5 Hz
-after /ʃ/, −6/−4 Hz after /s/ (MAD ≤ 31), F2 measurable in 92 % / 85 % of
+after /ʃ/, −6/−4 Hz after /s/ (MAD ≤ 31), F2 measurable in 91 % / 85 % of
 synthetic tokens; reference and synthesis use the same by-ear `sex`
 presets since `all_extracted.tsv` was re-extracted on 2026-09-18 (before
 that, with all-male presets capping F2 at 2600 Hz, F2 was measurable in
 only ~70 % and the errors were −7/+16, −8/+7 Hz: the preset, not the
-synthesis). Paul listened on 2026-09-30 (pilots 1–3) and heard the
-offset click/thunk, fixed the same day; the agent cannot listen.
+synthesis). Paul listened on 2026-09-30 (pilots 1–3) and again on
+2026-10-01 and heard the offset thunk both times (ramp 10 → 40 → 120 ms);
+the agent cannot listen.
 `test_output/wav/` holds 66 examples (local only; `TestSynthSibilant`
 regenerates them).
 

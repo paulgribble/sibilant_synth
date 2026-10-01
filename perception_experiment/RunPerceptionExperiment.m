@@ -3,8 +3,8 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %
 %   RunPerceptionExperiment("P01")                                   % she/see, a = 0:0.1:1, 10 reps
 %   RunPerceptionExperiment("P01", 'A', 0:0.2:1, 'Reps', 15)
-%   RunPerceptionExperiment("P01", 'A', [0 0.2 0.3 0.35 0.4:0.025:0.6 0.65 0.7 0.8 1], ...
-%                           'Reps', [3 3 4 5 7 8 9 10 12 10 9 8 7 5 4 3 3])       % weighted, 110 trials
+%   RunPerceptionExperiment("P01", 'A', [0 0.2 0.25 0.3 0.35 0.4:0.02:0.6 0.65 0.7 0.75 0.8 1], ...
+%                           'Reps', [6 3 5 9 10 7 5 6 6 7 8 7 6 6 5 7 10 9 5 3 6])   % weighted, 136 trials
 %   RunPerceptionExperiment("P01", 'Vowels', "u")                    % shoe/sue
 %   RunPerceptionExperiment("P01", 'Vowels', ["i" "u"])              % both, intermixed
 %   RunPerceptionExperiment("P01", 'Practice', 0)                    % no practice block
@@ -24,17 +24,22 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 % max(Reps)/n blocks apart from a random start of its own, so it appears at
 % most once per block and is spread over the session; each block is then
 % shuffled. Block sizes vary and a sparse level may first appear a few
-% blocks in. The suggested design (example above) has 17 levels: steps of
-% 0.025 between 0.4 and 0.6, 0.05 out to 0.3 and 0.7, 0.1 out to 0.2 and
-% 0.8, then the endpoints:
-%   A    = [0 0.2 0.3 0.35 0.4 0.425 0.45 0.475 0.5 0.525 0.55 0.575 0.6 0.65 0.7 0.8 1]
-%   Reps = [3 3   4   5    7   8     9    10    12  10    9    8     7   5    4   3   3]   % 110 trials
-%   Reps = [5 5   6   8    10  12    13   15    17  15    13   12    10  8    6   5   5]   % 165 trials
-% With 110 trials there are 12 blocks: a = 0.5 in all, 0.475 and 0.525 in
-% 10, the endpoints in 3 blocks 4 apart. In simulation (pse 0.45 - 0.6,
-% sigma 0.04 - 0.08, 2 % lapses) it estimates the pse with an SD of
-% 0.011 - 0.020 per session, 25 - 30 % better than 10 repetitions of each
-% of 0, 0.3:0.05:0.7, 1, and the slope to about +/- 20 %.
+% blocks in. The suggested design (example above) has 21 levels: steps of
+% 0.02 between 0.4 and 0.6, 0.05 out to 0.2 and 0.8, then the endpoints,
+% with most repetitions at 0.3 - 0.35 and 0.65 - 0.7 and at 0.5:
+%   A    = [0 0.2 0.25 0.3 0.35 0.4 0.42 0.44 0.46 0.48 0.5 0.52 0.54 0.56 0.58 0.6 0.65 0.7 0.75 0.8 1]
+%   Reps = [6 3   5    9   10   7   5    6    6    7    8   7    6    6    5    7   10   9   5    3    6]   % 136 trials
+% It is built for a pse anywhere in 0.4 - 0.6 and a 25 - 75 % width of
+% 0.1 - 0.4 (sigma 0.046 - 0.18): the slope is estimated by the levels
+% about 0.15 either side of the pse when the function is shallow and by
+% the dense centre when it is steep, the endpoints pin the lapse rate. In
+% simulation over that range (2 % lapses) the pse SD per session is
+% 0.013 - 0.016 for a width of 0.1, 0.025 - 0.028 for 0.25 and
+% 0.038 - 0.046 for 0.4, and log(sigma) has an SD of 0.28 - 0.46 (about
+% +/- 30 - 45 % in sigma); a design that only densifies the centre is as
+% good at pse = 0.5 but 15 - 20 % worse in both when the pse is 0.4 or
+% 0.6, and a plain 0.05 grid is as good when the function is shallow but
+% 40 - 60 % worse for the slope when it is steep.
 %
 % PRACTICE. The session opens with a block of the clear endpoint tokens
 % (a = 0 and a = 1 of every Talker x Vowel, whatever A is; Practice

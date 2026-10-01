@@ -121,9 +121,9 @@ onsets) moves with the sibilant; any fixed weight in [0, 1] (aliases
 `"sh"`, `"mid"`, `"s"`) is also accepted. The RMS contour follows the same
 weight; vowel duration and F0 are fixed by the excitation template.
 Sibilant and vowel are joined with a 10 ms cross-fade, and the vowel ends
-with a 40 ms raised-cosine ramp (the scored vowel end is still voiced,
-median −17 dB re mid-vowel, and some recordings end with a phonation click
-that the ramp has to cover). The vowel RMS is set to
+with a 120 ms raised-cosine ramp (the scored vowel end is still voiced,
+median −17 dB re mid-vowel, and a short ramp there gates the voice off
+with an audible thunk; real offsets decay over ~90 ms). The vowel RMS is set to
 `Level` dBFS with the sibilant at its data-driven level relative to it, and
 the token is scaled down only if its peak would exceed 0.99
 (`info.scaledBy`).
@@ -157,7 +157,7 @@ full run (72 talkers × 2 vowels = 144 cells, `a = 0:0.1:1`):
   then does the vowel follow the word): mid-vowel F1/F2 of the synthetic
   endpoints vs the talker's real means (`all_extracted.tsv`) have a median
   error of −4/−5 Hz after /ʃ/ and −6/−4 Hz after /s/ (MAD ≤ 31 Hz), with F2
-  passing the tracker's confidence gate in 92 % / 85 % of tokens. The
+  passing the tracker's confidence gate in 91 % / 85 % of tokens. The
   tracker's search ranges come from the roster's `sex` column, and the
   reference extraction uses the same roster, so both sides use the same
   per-talker presets. `TestSynthSibilant` overlays the synthetic and real
@@ -198,13 +198,15 @@ reproducible). `Reps` can also be a vector with one count per level of `A`,
 to spend fewer trials on the endpoints and more near the boundary: there
 are then `max(Reps)` blocks and a level with fewer repetitions is placed in
 that many of them, evenly spaced from a random start. Suggested weighted
-design for a boundary near `a = 0.5`, 17 levels denser near the middle:
-`'A', [0 0.2 0.3 0.35 0.4:0.025:0.6 0.65 0.7 0.8 1], 'Reps',
-[3 3 4 5 7 8 9 10 12 10 9 8 7 5 4 3 3]` (110 trials;
-`[5 5 6 8 10 12 13 15 17 15 13 12 10 8 6 5 5]` for 165). In simulation it
-estimates the pse with an SD of 0.011–0.020 per session, 25–30 % better
-than 10 repetitions of each of `0, 0.3:0.05:0.7, 1`, and the slope to about
-±20 %. The session opens with a **practice block** of the endpoint tokens
+design for a pse anywhere in `a` = 0.4–0.6 and a 25–75 % width of 0.1–0.4:
+`'A', [0 0.2 0.25 0.3 0.35 0.4:0.02:0.6 0.65 0.7 0.75 0.8 1], 'Reps',
+[6 3 5 9 10 7 5 6 6 7 8 7 6 6 5 7 10 9 5 3 6]` (136 trials): a dense
+centre for steep functions, extra repetitions about 0.15 either side of the
+centre for shallow ones, endpoints for the lapse rate. In simulation it
+estimates the pse with an SD of 0.013–0.046 per session (steep to shallow)
+and σ to about ±30–45 %, within a few percent of the Fisher-optimal
+136-trial allocation over that range.
+The session opens with a **practice block** of the endpoint tokens
 (`a = 0` and `a = 1` of every talker × vowel, whatever `A` is; `Practice`
 shuffled repetitions of each, 0 = none), run like the main trials with no
 feedback and followed by a screen announcing the main part.
