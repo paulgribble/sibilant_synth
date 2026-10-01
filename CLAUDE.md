@@ -81,11 +81,14 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     expected entropy of the (μ, log σ) marginal, Prins 2013; `next` takes
     4 ms). Options `Levels` (0:0.01:1 since 2026-10-01 at Paul's request,
     was 0:0.02:1; all synthesised up front, pert4P17 i/u are in `stimuli/`),
-    `Opening` (0.3:0.05:0.7 shuffled per function before Ψ chooses; Paul,
-    2026-10-01, so the first trials bracket the middle for every listener
-    instead of the deterministic 0.5-then-outward walk of the greedy rule;
-    no precision cost at 100 trials), `MaxTrials` (100 per talker ×
-    vowel, opening included), `StopSd` ([] or
+    `Opening` ([0 0.2 0.4 0.5 0.6 0.8 1] shuffled per function before Ψ
+    chooses; Paul, 2026-10-01, so every listener first hears the whole
+    continuum rather than the deterministic 0.5-then-outward walk of the
+    greedy rule, which could bias them; was 0.3:0.05:0.7 earlier that day,
+    which only bracketed the middle; 80 simulated sessions at pse 0.55,
+    σ 0.04: boundary RMSE 0.012 vs 0.010 without an opening, SD(log σ)
+    0.235 either way),
+    `MaxTrials` (100 per talker × vowel, opening included), `StopSd` ([] or
     [sdMu sdLogSigma], checked from `MinTrials` 30), `SigmaRange`, `Lapse`,
     `Function`; several talker × vowel functions are interleaved in rounds.
     Rows carry `pick` (opening/psi) and `mu_hat sigma_hat mu_sd logsigma_sd

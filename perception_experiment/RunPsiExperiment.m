@@ -17,11 +17,11 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % the slope is measured, instead of being spread over a fixed grid, so
 % fewer trials give the same precision and no grid has to be chosen in
 % advance. Each function opens with the Opening levels in random order
-% (default 0.3:0.05:0.7, 9 trials), so every listener first hears a set
-% that brackets the middle of the continuum whatever they answer; their
-% responses enter the posterior like any other, and the Psi rule chooses
-% from then on. With several talkers or vowels each round of trials visits
-% every function in random order.
+% (default [0 0.2 0.4 0.5 0.6 0.8 1], 7 trials), so every listener first
+% hears the whole continuum, endpoints included, before any trial is placed
+% by their own answers; those responses enter the posterior like any other,
+% and the Psi rule chooses from then on. With several talkers or vowels
+% each round of trials visits every function in random order.
 %
 % STOPPING. Each function ends after MaxTrials trials, or earlier once
 % (from MinTrials on) the posterior SD of mu is at most StopSd(1) and that
@@ -49,7 +49,8 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 %               (default 0:0.01:1; all are synthesised up front)
 %   Opening     levels of the first trials of every function, played in
 %               random order before the Psi rule starts choosing (default
-%               0.3:0.05:0.7; [] = none). They count towards MaxTrials.
+%               [0 0.2 0.4 0.5 0.6 0.8 1]; [] = none). They count towards
+%               MaxTrials.
 %   MaxTrials   trials per talker x vowel (default 100)
 %   StopSd      [] (default) = run MaxTrials; [sdMu sdLogSigma] = stop a
 %               function once both posterior SDs are at most these
@@ -82,7 +83,7 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 arguments
     participant (1,1) string
     opts.Levels (1,:) double {mustBeInRange(opts.Levels, 0, 1)} = 0:0.01:1
-    opts.Opening (1,:) double {mustBeInRange(opts.Opening, 0, 1)} = 0.3:0.05:0.7
+    opts.Opening (1,:) double {mustBeInRange(opts.Opening, 0, 1)} = [0 0.2 0.4 0.5 0.6 0.8 1]
     opts.MaxTrials (1,1) double {mustBeInteger, mustBePositive} = 100
     opts.StopSd (1,:) double {mustBePositive} = []
     opts.MinTrials (1,1) double {mustBeInteger, mustBeNonnegative} = 30

@@ -222,12 +222,12 @@ reduce the uncertainty about μ and log σ most, lapse marginalised out
 (Prins 2013). Trials cluster at the boundary estimate and about one σ
 either side of it, so no grid has to be chosen in advance and fewer trials
 give the same precision. Each function opens with the `Opening` levels in
-random order (default `0.3:0.05:0.7`, 9 trials), so every listener first
-hears a set bracketing the middle of the continuum whatever they answer;
-those responses enter the posterior like any other. A function ends after
-`MaxTrials` (default 100, opening included)
-or, with `StopSd = [sdMu sdLogSigma]`, as soon as both posterior SDs are
-that small (checked from `MinTrials`, default 30); several talker × vowel
+random order (default `[0 0.2 0.4 0.5 0.6 0.8 1]`, 7 trials), so every
+listener first hears the whole continuum, endpoints included, before any
+trial is placed by their own answers; those responses enter the posterior
+like any other. A function ends after `MaxTrials` (default 100, opening
+included) or, with `StopSd = [sdMu sdLogSigma]`, as soon as both posterior
+SDs are that small (checked from `MinTrials`, default 30); several talker × vowel
 functions are interleaved. Each trial row carries the posterior after it
 (`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, `lapse_hat`, plus `pick` =
 opening / psi, no `block` column) and the
