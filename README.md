@@ -226,9 +226,9 @@ random order (default `[0 0.2 0.4 0.5 0.6 0.8 1]`, 7 trials), so every
 listener first hears the whole continuum, endpoints included, before any
 trial is placed by their own answers; those responses enter the posterior
 like any other. A function ends after `MaxTrials` (default 100, opening
-included) or, with `StopSd = [sdMu sdLogSigma]`, as soon as both posterior
-SDs are that small (checked from `MinTrials`, default 30); several talker × vowel
-functions are interleaved. Each trial row carries the posterior after it
+included) or, with `StopSd = [sdMu sdLogSigma]` (default `[0.02 0.3]`,
+`[]` = none), as soon as both posterior SDs are that small (checked from
+`MinTrials`, default 30); several talker × vowel functions are interleaved. Each trial row carries the posterior after it
 (`mu_hat`, `sigma_hat`, `mu_sd`, `logsigma_sd`, `lapse_hat`, plus `pick` =
 opening / psi, no `block` column) and the
 `.json` the final estimate per function; `FitPsychometric` reads the file
@@ -240,9 +240,10 @@ of every trial with the running boundary estimate, the running estimate of
 0.02–0.07, lapse 0–3 %) 100 trials give a boundary RMSE of 0.005–0.021
 (≈ 0.3 σ) and σ to ±22–26 % whatever the true boundary, where the
 136-trial constant design gives 0.008–0.019 and ±26–80 %; the posterior
-SDs track the real error within ~10 %, so `StopSd = [0.015 0.25]` with
-`MaxTrials` 150 ends a steep listener's session after ~105 trials and a
-shallow one's at 145–150.
+SDs track the real error within ~10 %. The default `StopSd = [0.02 0.3]`
+ends a function after 75–105 trials, so a shallow listener usually runs
+the full 100; `[0.015 0.25]` with `MaxTrials` 150 ends a steep listener's
+session after ~105 trials and a shallow one's at 145–150.
 
 *Stimuli* are WAV files, never synthesised during the trials. Before the
 first trial `PreparePerceptionStimuli` looks in `StimDir` (default

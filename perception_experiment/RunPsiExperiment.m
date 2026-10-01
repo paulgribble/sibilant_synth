@@ -1,8 +1,9 @@
 function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % RunPsiExperiment  Adaptive two-alternative identification on the /sh/ -- /s/ continuum (Psi method).
 %
-%   RunPsiExperiment("P01")                                      % she/see, 100 trials, levels 0:0.01:1
-%   RunPsiExperiment("P01", 'MaxTrials', 150, 'StopSd', [0.015 0.25])   % stop earlier once that precise
+%   RunPsiExperiment("P01")                                      % she/see, levels 0:0.01:1, at most 100 trials
+%   RunPsiExperiment("P01", 'StopSd', [])                        % always run the 100 trials
+%   RunPsiExperiment("P01", 'MaxTrials', 150, 'StopSd', [0.015 0.25])   % longer, for a more precise slope
 %   RunPsiExperiment("P01", 'Vowels', ["i" "u"])                 % two functions, trials intermixed
 %   [T, dataFile, est] = RunPsiExperiment("sim", 'Simulate', [0.55 0.03 0.02])
 %
@@ -23,12 +24,14 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 % and the Psi rule chooses from then on. With several talkers or vowels
 % each round of trials visits every function in random order.
 %
-% STOPPING. Each function ends after MaxTrials trials, or earlier once
-% (from MinTrials on) the posterior SD of mu is at most StopSd(1) and that
-% of log sigma at most StopSd(2). The posterior SDs match the actual error
-% of the estimates to within about 10 % in simulation, so StopSd =
-% [0.015 0.25] means: boundary known to about +/- 0.015, sigma to about
-% +/- 25 %. Over the pilot range (boundary 0.45 - 0.55, sigma 0.02 - 0.07,
+% STOPPING. Each function ends after MaxTrials trials (default 100), or
+% earlier once (from MinTrials on) the posterior SD of mu is at most
+% StopSd(1) and that of log sigma at most StopSd(2). The posterior SDs
+% match the actual error of the estimates to within about 10 % in
+% simulation, so the default StopSd = [0.02 0.3] means: boundary known to
+% about +/- 0.02, sigma to about +/- 30 %; in simulation that takes 75 -
+% 105 trials, so a shallow listener (sigma 0.07) usually runs the full
+% 100. Over the pilot range (boundary 0.45 - 0.55, sigma 0.02 - 0.07,
 % lapse 0 - 3 %) the per-session boundary RMSE is 0.007 - 0.029 after 50
 % trials, 0.005 - 0.021 after 100 and 0.004 - 0.016 after 150 (about 0.3
 % sigma at 100), and the SD of log sigma 0.32 - 0.41, 0.22 - 0.26 and
@@ -52,8 +55,8 @@ function [T, dataFile, est] = RunPsiExperiment(participant, opts)
 %               [0 0.2 0.4 0.5 0.6 0.8 1]; [] = none). They count towards
 %               MaxTrials.
 %   MaxTrials   trials per talker x vowel (default 100)
-%   StopSd      [] (default) = run MaxTrials; [sdMu sdLogSigma] = stop a
-%               function once both posterior SDs are at most these
+%   StopSd      [sdMu sdLogSigma]: stop a function once both posterior SDs
+%               are at most these (default [0.02 0.3]); [] = run MaxTrials
 %   MinTrials   trials before StopSd is checked (default 30)
 %   SigmaRange  [lo hi] of the sigma grid of the posterior (default [0.005 0.5])
 %   Lapse       lapse rates on the grid (default [0 0.01 0.02 0.04 0.08])
@@ -85,7 +88,7 @@ arguments
     opts.Levels (1,:) double {mustBeInRange(opts.Levels, 0, 1)} = 0:0.01:1
     opts.Opening (1,:) double {mustBeInRange(opts.Opening, 0, 1)} = [0 0.2 0.4 0.5 0.6 0.8 1]
     opts.MaxTrials (1,1) double {mustBeInteger, mustBePositive} = 100
-    opts.StopSd (1,:) double {mustBePositive} = []
+    opts.StopSd (1,:) double {mustBePositive} = [0.02 0.3]
     opts.MinTrials (1,1) double {mustBeInteger, mustBeNonnegative} = 30
     opts.SigmaRange (1,2) double {mustBePositive} = [0.005 0.5]
     opts.Lapse (1,:) double {mustBeInRange(opts.Lapse, 0, 0.5, "exclude-upper")} = [0 0.01 0.02 0.04 0.08]

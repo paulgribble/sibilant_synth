@@ -88,8 +88,10 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     which only bracketed the middle; 80 simulated sessions at pse 0.55,
     σ 0.04: boundary RMSE 0.012 vs 0.010 without an opening, SD(log σ)
     0.235 either way),
-    `MaxTrials` (100 per talker × vowel, opening included), `StopSd` ([] or
-    [sdMu sdLogSigma], checked from `MinTrials` 30), `SigmaRange`, `Lapse`,
+    `MaxTrials` (100 per talker × vowel, opening included), `StopSd`
+    ([sdMu sdLogSigma], default [0.02 0.3] since 2026-10-01 at Paul's
+    request, was []; [] = none; checked from `MinTrials` 30),
+    `SigmaRange`, `Lapse`,
     `Function`; several talker × vowel functions are interleaved in rounds.
     Rows carry `pick` (opening/psi) and `mu_hat sigma_hat mu_sd logsigma_sd
     lapse_hat` (no `block`); the
@@ -109,8 +111,9 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     Trials never land at a ≤ 0.1 or ≥ 0.9, so lapses are constrained
     only weakly; σ is biased −10 % at lapse 0 (prior mean lapse 0.03),
     the MLE equally. Simulated with 0.02 levels; a 0.01 check (3 cells,
-    150 sessions) gave the same precision. Suggested: `MaxTrials` 100 (~4 min), or `StopSd`
-    [0.015 0.25] with `MaxTrials` 150 when the slope matters most.
+    150 sessions) gave the same precision. Defaults: `StopSd` [0.02 0.3]
+    with `MaxTrials` 100 (≤ ~4 min); `StopSd` [0.015 0.25] with
+    `MaxTrials` 150 when the slope matters most.
     Headless GUI test with injected keys/clicks passed (normal end);
     Esc/close paths not run. `PlotPsiSession(file)` (Paul, 2026-10-01):
     2 × 2 figure per session, levels + running boundary, running
