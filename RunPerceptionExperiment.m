@@ -77,8 +77,8 @@ function [T, dataFile] = RunPerceptionExperiment(participant, opts)
 %   Vowels      "i" (she/see, default), "u" (shoe/sue) or ["i" "u"] (mixed)
 %   Talkers     one or more talker ids (default "pert4P17"; see
 %               SynthSibilantTalkers); several are intermixed
-%   StimDir     folder of the WAVs (default ../stimuli next to this folder)
-%   DataDir     where the data file goes (default data/ in this folder)
+%   StimDir     folder of the WAVs (default stimuli/ next to this file)
+%   DataDir     where the data file goes (default data/ next to this file)
 %   Keys        [left right] response keys (default ["f" "j"])
 %   ShSide      "left" (default) or "right": side of the /sh/ button and
 %               key, for counterbalancing over participants
@@ -131,8 +131,8 @@ arguments
 end
 
 here = fileparts(mfilename('fullpath'));
-addpath(fileparts(here));                                % SynthSibilant & co.
-if opts.StimDir == "", opts.StimDir = fullfile(fileparts(here), "stimuli"); end
+addpath(fullfile(here, "synth"));                        % SynthSibilant & co.
+if opts.StimDir == "", opts.StimDir = fullfile(here, "stimuli"); end
 if opts.DataDir == "", opts.DataDir = fullfile(here, "data"); end
 
 % ------------------------------------------------------------ check options

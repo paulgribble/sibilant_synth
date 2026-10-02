@@ -5,7 +5,7 @@ function model = BuildSibilantModel(opts)
 %   model = BuildSibilantModel('Talkers', ["pert6P02" "pert8P01"], ...
 %                              'OutFile', "test_model.mat")
 %
-% Reads the sibilant_experiment raw audio (microphone channel) and the
+% Reads the sibilant_adaptation raw audio (microphone channel) and the
 % hand-scored boundaries (scored_data/<pid>_scored.tsv: sibilant onset,
 % sibilant end = vowel onset, vowel end, in samples) of every UNSHIFTED
 % trial (practice and baseline blocks) of she / see / shoe / sue, and
@@ -61,9 +61,9 @@ function model = BuildSibilantModel(opts)
 % Requires Signal Processing Toolbox (pmtm, lpc, poly2lsf).
 
 arguments
-    opts.RawDir (1,1) string = "/Users/plg/Library/CloudStorage/Dropbox/data/sibilant_experiment/raw_data"
-    opts.ScoredDir (1,1) string = "/Users/plg/github/sibilant_experiment/scored_data"
-    opts.ParticipantsFile (1,1) string = "/Users/plg/github/sibilant_experiment/participants.tsv"
+    opts.RawDir (1,1) string = "/Users/plg/Library/CloudStorage/Dropbox/data/sibilant_adaptation/raw_data"
+    opts.ScoredDir (1,1) string = "/Users/plg/github/sibilant_adaptation/scored_data"
+    opts.ParticipantsFile (1,1) string = "/Users/plg/github/sibilant_adaptation/participants.tsv"
     opts.Talkers string = "all"
     opts.OutFile (1,1) string = fullfile(fileparts(mfilename('fullpath')), "sibilant_model.mat")
     opts.Fs (1,1) double = 44100

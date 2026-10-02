@@ -1,23 +1,48 @@
 # CLAUDE.md — agent context for sibilant_perception
 
-MATLAB synthesizer for she / see / shoe / sue tokens whose sibilant lies on a
-continuum from /ʃ/ (`a = 0`) to /s/ (`a = 1`), built from the recordings of
-the `sibilant_experiment` cohort. Purpose: stimuli for a two-alternative
-forced-choice perception experiment ("did you hear she or see?"). Paul
-Gribble (pgribble@uwo.ca) is the user. `README.md` and `methods.md`
+MATLAB two-alternative forced-choice perception experiment ("did you hear
+she or see?") on a sibilant continuum from /ʃ/ (`a = 0`) to /s/ (`a = 1`),
+plus the data-driven synthesizer (`synth/`) that makes its she / see /
+shoe / sue tokens from the recordings of the `sibilant_adaptation` cohort.
+Paul Gribble (pgribble@uwo.ca) is the user. `README.md` and `methods.md`
 document the current state for humans; this file is the operational brief:
 decisions with their dates and reasons, gotchas, how to work here. Git:
 https://github.com/paulgribble/sibilant_perception (renamed from sibilant_synth
 on 2026-10-02, and from synth_sibilant on 2026-09-16).
 
+## Layout (2026-10-02)
+
+Experiment functions at the root, synthesis in `synth/`: Paul wanted the
+perception experiment to "take center stage" and the synthesizer treated
+as its helper. `synth/` rather than a top-level `lib/` because the
+synthesizer already has a `lib/` of measurement helpers (now
+`synth/lib/`). Not a MATLAB package (`+synth`): that would change every
+call. The experiment functions `addpath(fullfile(here, "synth"))`
+themselves; `synth/` files locate the `.mat` and `lib/` next to
+themselves, so nothing there changed. `stimuli/` (experiment input) and
+`data` (output) sit at the root; `synth/test_output/` with its scripts.
+
+```
+RunPerceptionExperiment.m  RunPsiExperiment.m  PsiMethod.m  PlotPsiSession.m
+PreparePerceptionStimuli.m  FitPsychometric.m
+data -> ~/Dropbox/data/sibilant_perception/data   stimuli/
+synth/  SynthSibilant.m SynthSibilantTalkers.m WriteSibilantContinuum.m
+        BuildSibilantModel.m sibilant_model.mat TestSynthSibilant.m
+        ValidateSynthSibilant.m lib/ test_output/
+papers/  README.md  methods.md  CLAUDE.md
+```
+
 ## Mental model
 
 ```
-raw WAVs + scored boundaries  --BuildSibilantModel-->  sibilant_model.mat
+raw WAVs + scored boundaries  --BuildSibilantModel-->  synth/sibilant_model.mat
 sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
+WriteSibilantContinuum / PreparePerceptionStimuli  -->  stimuli/*.wav
+stimuli + listener  --RunPerceptionExperiment | RunPsiExperiment-->  data/*.tsv
+data/*.tsv  --FitPsychometric | PlotPsiSession-->  boundary, slope, figures
 ```
 
-- `SynthSibilant(a, vowel, talker, Name, Value)` — the deliverable. `vowel`
+- `SynthSibilant(a, vowel, talker, Name, Value)` — the synthesizer. `vowel`
   "i"/"u" (also ee/oo/she/see/shoe/sue), `talker` "random" or an id (72,
   `SynthSibilantTalkers()`). Options `VowelContext` (weight in [0,1]
   between the /ʃ/- and /s/-context vowel, default 0.5; aliases
@@ -31,11 +56,11 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
   (Paul, 2026-09-17) so a continuum's vowel is identical end to end,
   excitation included. Paul writes to `stimuli/` (gitignored; rewrite it
   after any change to the synthesis).
-- `TestSynthSibilant()` — 3 talkers, figures + WAVs → `test_output/`.
+- `TestSynthSibilant()` — 3 talkers, figures + WAVs → `synth/test_output/`.
 - `ValidateSynthSibilant()` — all 72 talkers, whole-spectrum stats →
-  `test_output/validation_all.{tsv,png}`; ~3 min.
-- `perception_experiment/` (2026-09-17) — the 2AFC experiment and its
-  analysis; `addpath perception_experiment`.
+  `synth/test_output/validation_all.{tsv,png}`; ~3 min.
+- The 2AFC experiment and its analysis (2026-09-17; at the root since
+  2026-10-02, no `addpath` needed when run from there).
   - `RunPerceptionExperiment(participant, ...)`: uifigure GUI, two buttons
     (she/see, shoe/sue, or "she / shoe"/"see / sue" when vowels are mixed)
     + keys F/J (`Keys`, `ShSide` for counterbalancing). Options `A`,
@@ -132,7 +157,7 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
     `fminsearch` from a grid (no toolboxes), per `By` group (default
     vowel), parametric bootstrap CIs + deviance p, writes
     `<file>_fit.{tsv,png}`.
-- `lib/` — measurement helpers: `measureMidSpectrum` (three 50 ms
+- `synth/lib/` — measurement helpers: `measureMidSpectrum` (three 50 ms
   multitaper windows at mid-sibilant, mirrors the experiment's "m" point),
   `spectrumFeatureGrid` / `spectrumFeatures` (1/12-oct, 500 Hz–16 kHz,
   level-normalised), `loadRealSpectra` (reads the experiment's per-trial
@@ -145,11 +170,14 @@ sibilant_model.mat + (a, vowel, talker)  --SynthSibilant-->  y, Fs, info
 
 ## Data (all external to this folder)
 
-- Raw audio: `/Users/plg/Library/CloudStorage/Dropbox/data/sibilant_experiment/raw_data/<group>/<pid>/*.wav`,
+- Raw audio: `/Users/plg/Library/CloudStorage/Dropbox/data/sibilant_adaptation/raw_data/<group>/<pid>/*.wav`
+  (folder renamed from sibilant_experiment on 2026-10-02),
   stereo, **ch1 = mic** (used), ch2 = feedback (ignored). 44.1 kHz for the
   pert cohorts, 48 kHz for ryan (excluded anyway: no practice block, hence
   no see/sue).
-- Experiment repo: `/Users/plg/github/sibilant_experiment` — read its
+- Experiment repo: `/Users/plg/github/sibilant_adaptation` (renamed from
+  sibilant_experiment on 2026-10-02; the defaults in Build/Test/Validate
+  follow) — read its
   `README.md`, `code/analysis/README.md`, `code/analysis/CLAUDE.md` for the
   data conventions. Used here: `participants.tsv` (roster; its `sex`
   column, renamed from `gender` 2026-09-18 at Paul's call since sex is the
@@ -264,7 +292,7 @@ only ~70 % and the errors were −7/+16, −8/+7 Hz: the preset, not the
 synthesis). Paul listened on 2026-09-30 (pilots 1–3) and again on
 2026-10-01 and heard the offset thunk both times (ramp 10 → 40 → 120 ms);
 the agent cannot listen.
-`test_output/wav/` holds 66 examples (local only; `TestSynthSibilant`
+`synth/test_output/wav/` holds 66 examples (local only; `TestSynthSibilant`
 regenerates them).
 
 ## Working here
@@ -286,10 +314,10 @@ regenerates them).
   experiment repo (all 72 were present on 2026-09-17). Regenerate with
   `extract_spectra("<pid>")` there, or pass `'Talkers'` with the subset
   that has spectra; a 70-talker subset reproduced the 72-talker statistics.
-- `test_output/` is regenerated by the test/validate scripts and `stimuli/`
-  by `WriteSibilantContinuum` (topped up by `PreparePerceptionStimuli`);
-  both safe to delete. Both are gitignored (along with
-  `perception_experiment/data` — participant data, NOT regenerable; on
+- `synth/test_output/` is regenerated by the test/validate scripts and
+  `stimuli/` by `WriteSibilantContinuum` (topped up by
+  `PreparePerceptionStimuli`); both safe to delete. Both are gitignored
+  (along with `data` — participant data, NOT regenerable; on
   Paul's Mac it is a symlink (2026-10-02) to
   `~/Dropbox/data/sibilant_perception/data`, so the
   ignore pattern has no trailing slash, which would match only a real
@@ -313,11 +341,12 @@ regenerates them).
   the set. Simulated recovery (pse 0.45, σ 0.06, 11 levels): pse unbiased,
   SD 0.024 @ 10 reps; with 3 % lapses `Lapse="none"` inflates σ ~50 %,
   "symmetric" does not — keep it the default.
-- `lib/` is not on the MATLAB path by itself: `TestSynthSibilant` and
-  `ValidateSynthSibilant` `addpath` it (and the experiment repo's
+- `synth/lib/` is not on the MATLAB path by itself: `TestSynthSibilant`
+  and `ValidateSynthSibilant` `addpath` it (and the experiment repo's
   `code/analysis/lib`) at the top. `SynthSibilant`, `BuildSibilantModel`
-  and `WriteSibilantContinuum` use only local functions. The
-  `perception_experiment/` functions `addpath` the repo root themselves.
+  and `WriteSibilantContinuum` use only local functions. The experiment
+  functions at the root `addpath` `synth/` themselves; using the
+  synthesizer directly needs `addpath synth`.
 - Model struct fields: `Fs, tokens, vowelOf, classOf, nSlices, logGridHz,
   lpcOrder, preEmph, lpcHop, talkerIds, talkers(i).words(j).{sibSpecDb,
   sibPeakHz, sibEnvDb, sibDurS, sibLevelDb, vowLsf, vowRmsDb, vowDurS,
@@ -328,8 +357,8 @@ regenerates them).
 
 - **Review all documentation after every code change and again at every
   commit.** That means every `.m` doc header (the `%` block under the
-  `function` line, in all top-level files, `lib/` and
-  `perception_experiment/`), `README.md`, `methods.md` and this `CLAUDE.md`.
+  `function` line, in all top-level files, `synth/` and `synth/lib/`),
+  `README.md`, `methods.md` and this `CLAUDE.md`.
   Check for accuracy and currency: algorithm descriptions, option lists,
   defaults, file tables, output fields, `.gitignore` contents, model fields,
   validation numbers (re-run `TestSynthSibilant` / `ValidateSynthSibilant`
@@ -358,7 +387,7 @@ regenerates them).
 - Include pert0 sham adaptation trials (also unshifted) to thicken the
   she/shoe estimates; nothing can thicken see/sue (5 trials each).
 - Listening tests to locate the category boundary in `a`: the tooling
-  exists (`perception_experiment/`) and Paul has run pilots on himself
+  exists (the root functions) and Paul has run pilots on himself
   (2026-09-30, constant stimuli; none yet with `RunPsiExperiment`); a real
   pilot could also compare the fixed vowel with `"morph"`, and a
   Lane-style level-only path with the mel morph.

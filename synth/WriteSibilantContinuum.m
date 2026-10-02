@@ -1,7 +1,7 @@
 function manifest = WriteSibilantContinuum(outDir, opts)
 % WriteSibilantContinuum  Write a set of continuum tokens to disk with a manifest.
 %
-%   manifest = WriteSibilantContinuum("stimuli")
+%   manifest = WriteSibilantContinuum("stimuli")          % from the repo root, after addpath synth
 %   manifest = WriteSibilantContinuum("stimuli", 'A', 0:0.125:1, 'Vowels', ["i" "u"], ...
 %                                     'Talkers', ["pert6P02" "pert8P01"], 'Seed', 42)
 %

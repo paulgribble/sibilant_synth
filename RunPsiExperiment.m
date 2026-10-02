@@ -109,8 +109,8 @@ arguments
 end
 
 here = fileparts(mfilename('fullpath'));
-addpath(fileparts(here));                                % SynthSibilant & co.
-if opts.StimDir == "", opts.StimDir = fullfile(fileparts(here), "stimuli"); end
+addpath(fullfile(here, "synth"));                        % SynthSibilant & co.
+if opts.StimDir == "", opts.StimDir = fullfile(here, "stimuli"); end
 if opts.DataDir == "", opts.DataDir = fullfile(here, "data"); end
 
 % ------------------------------------------------------------ check options

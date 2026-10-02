@@ -10,7 +10,7 @@ function [y, Fs, info] = SynthSibilant(a, vowel, talker, opts)
 %   talker  "random" (default) or a participant id (see SynthSibilantTalkers)
 %
 % The token is built from the data-driven talker model sibilant_model.mat
-% (BuildSibilantModel, from the sibilant_experiment recordings):
+% (BuildSibilantModel, from the sibilant_adaptation recordings):
 %
 %   SIBILANT  White noise shaped frame by frame by a time-varying spectral
 %             envelope. At a = 0 / 1 the envelope is the talker's mean /sh/

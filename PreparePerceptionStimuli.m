@@ -2,7 +2,7 @@ function S = PreparePerceptionStimuli(stimDir, talkers, vowels, A, opts)
 % PreparePerceptionStimuli  Make sure the WAVs an experiment needs exist; synthesise the missing ones.
 %
 %   S = PreparePerceptionStimuli(stimDir, talkers, vowels, A)
-%   S = PreparePerceptionStimuli("../stimuli", "pert6P02", ["i" "u"], 0:0.25:1)
+%   S = PreparePerceptionStimuli("stimuli", "pert6P02", ["i" "u"], 0:0.25:1)
 %
 % For every talker x vowel x a, <stimDir>/<talker>_<vowel>_a<a>.wav (the
 % WriteSibilantContinuum naming, a with 3 decimals) is looked up. Existing
@@ -38,7 +38,7 @@ arguments
     opts.Model = ""
 end
 
-addpath(fileparts(fileparts(mfilename('fullpath'))));    % SynthSibilant & co.
+addpath(fullfile(fileparts(mfilename('fullpath')), "synth"));   % SynthSibilant & co.
 if ~isfolder(stimDir), mkdir(stimDir); end
 
 rows = {};

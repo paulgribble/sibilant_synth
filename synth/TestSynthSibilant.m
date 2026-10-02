@@ -39,8 +39,8 @@ arguments
     opts.Talkers string = "auto"
     opts.Model (1,1) string = fullfile(fileparts(mfilename('fullpath')), "sibilant_model.mat")
     opts.OutDir (1,1) string = fullfile(fileparts(mfilename('fullpath')), "test_output")
-    opts.ExperimentDir (1,1) string = "/Users/plg/github/sibilant_experiment"
-    opts.RawDir (1,1) string = "/Users/plg/Library/CloudStorage/Dropbox/data/sibilant_experiment/raw_data"
+    opts.ExperimentDir (1,1) string = "/Users/plg/github/sibilant_adaptation"
+    opts.RawDir (1,1) string = "/Users/plg/Library/CloudStorage/Dropbox/data/sibilant_adaptation/raw_data"
     opts.Seed (1,1) double = 1
 end
 

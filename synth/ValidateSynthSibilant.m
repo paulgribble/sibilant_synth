@@ -44,7 +44,7 @@ arguments
     opts.Talkers string = "all"
     opts.Model (1,1) string = fullfile(fileparts(mfilename('fullpath')), "sibilant_model.mat")
     opts.OutDir (1,1) string = fullfile(fileparts(mfilename('fullpath')), "test_output")
-    opts.ExperimentDir (1,1) string = "/Users/plg/github/sibilant_experiment"
+    opts.ExperimentDir (1,1) string = "/Users/plg/github/sibilant_adaptation"
     opts.Seed (1,1) double = 1
     opts.AGrid (1,:) double = 0:0.1:1
 end
