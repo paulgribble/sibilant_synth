@@ -11,5 +11,5 @@ slprj/
 stimuli/
 
 # Participant data and fits written by perception_experiment/RunPerceptionExperiment, RunPsiExperiment and FitPsychometric
-perception_experiment/data/
+perception_experiment/data
 
