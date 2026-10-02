@@ -291,7 +291,7 @@ regenerates them).
   both safe to delete. Both are gitignored (along with
   `perception_experiment/data` — participant data, NOT regenerable; on
   Paul's Mac it is a symlink (2026-10-02) to
-  `~/Library/CloudStorage/Dropbox/data/sibilant_perception/pilot`, so the
+  `~/Dropbox/data/sibilant_perception/data`, so the
   ignore pattern has no trailing slash, which would match only a real
   directory — `*.asv`, `*.autosave`, `slprj/`, `.DS_Store`), so a fresh
   clone has none of it. `sibilant_model.mat` IS tracked.
