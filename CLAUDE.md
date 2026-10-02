@@ -1,4 +1,4 @@
-# CLAUDE.md — agent context for sibilant_synth
+# CLAUDE.md — agent context for sibilant_perception
 
 MATLAB synthesizer for she / see / shoe / sue tokens whose sibilant lies on a
 continuum from /ʃ/ (`a = 0`) to /s/ (`a = 1`), built from the recordings of
@@ -7,8 +7,8 @@ forced-choice perception experiment ("did you hear she or see?"). Paul
 Gribble (pgribble@uwo.ca) is the user. `README.md` and `methods.md`
 document the current state for humans; this file is the operational brief:
 decisions with their dates and reasons, gotchas, how to work here. Git:
-https://github.com/paulgribble/sibilant_synth (renamed from synth_sibilant
-on 2026-09-16).
+https://github.com/paulgribble/sibilant_perception (renamed from sibilant_synth
+on 2026-10-02, and from synth_sibilant on 2026-09-16).
 
 ## Mental model
 

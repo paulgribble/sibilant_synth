@@ -1,4 +1,4 @@
-# sibilant_synth
+# sibilant_perception
 
 A data-driven MATLAB synthesizer for **she / see / shoe / sue** tokens whose
 sibilant lies anywhere on a continuum from /ʃ/ (`a = 0`) to /s/ (`a = 1`),
